@@ -1,0 +1,30 @@
+{
+  "name": "bad-args-flow",
+  "maxSteps": 1,
+  "mockResponses": [
+    {
+      "choices": [
+        {
+          "message": {
+            "content": null,
+            "tool_calls": [
+              {
+                "id": "t1",
+                "function": {
+                  "name": "list_field_options",
+                  "arguments": "{bad"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "user": "查字段",
+      "expect": { "type": "reply", "contains": "处理超时", "notCardAction": true }
+    }
+  ]
+}

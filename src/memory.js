@@ -5,6 +5,7 @@ const fs = require('fs')
 const path = require('path')
 
 const DEFAULT_DIR = path.join(__dirname, '..', 'data', 'memory')
+const ALLOWED_ROLES = new Set(['system', 'user', 'assistant', 'tool'])
 
 function filePath(openId, baseDir) {
   const safeBase = path.resolve(baseDir)
@@ -13,19 +14,38 @@ function filePath(openId, baseDir) {
   return p
 }
 
+function sanitizeHistory(items) {
+  if (!Array.isArray(items)) return []
+  return items
+    .filter((m) => m && typeof m === 'object')
+    .map((m) => ({ role: m.role, content: m.content }))
+    .filter((m) => ALLOWED_ROLES.has(m.role) && typeof m.content === 'string')
+}
+
 function loadHistory(openId, baseDir = DEFAULT_DIR) {
   try {
-    return JSON.parse(fs.readFileSync(filePath(openId, baseDir), 'utf8'))
+    const parsed = JSON.parse(fs.readFileSync(filePath(openId, baseDir), 'utf8'))
+    return sanitizeHistory(parsed)
   } catch (e) {
-    if (e.code === 'ENOENT') return []
+    if (e.code === 'ENOENT' || e.name === 'SyntaxError') return []
     throw e
   }
 }
 
+function atomicWriteJson(targetPath, value) {
+  const dir = path.dirname(targetPath)
+  const tmp = path.join(
+    dir,
+    `.${path.basename(targetPath)}.${process.pid}.${Date.now()}.tmp`
+  )
+  fs.writeFileSync(tmp, JSON.stringify(value, null, 2))
+  fs.renameSync(tmp, targetPath)
+}
+
 function appendHistory(openId, messages, maxHistory = 20, baseDir = DEFAULT_DIR) {
-  const next = [...loadHistory(openId, baseDir), ...messages].slice(-maxHistory)
+  const next = sanitizeHistory([...loadHistory(openId, baseDir), ...sanitizeHistory(messages)]).slice(-maxHistory)
   fs.mkdirSync(baseDir, { recursive: true })
-  fs.writeFileSync(filePath(openId, baseDir), JSON.stringify(next, null, 2))
+  atomicWriteJson(filePath(openId, baseDir), next)
   return next
 }
 
@@ -38,4 +58,4 @@ function clearHistory(openId, baseDir = DEFAULT_DIR) {
   }
 }
 
-module.exports = { loadHistory, appendHistory, clearHistory }
+module.exports = { loadHistory, appendHistory, clearHistory, sanitizeHistory, atomicWriteJson }

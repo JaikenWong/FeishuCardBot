@@ -81,3 +81,153 @@ test('记忆持久化 user+assistant 文本', async () => {
     { role: 'assistant', content: '收到' },
   ])
 })
+
+test('trace 记录关键事件', async () => {
+  const events = []
+  const openai = fakeOpenAI([{ choices: [{ message: { content: 'ok' } }] }])
+  const agent = createAgent({
+    openai,
+    plmClient: {},
+    config,
+    schema,
+    memoryDir: tmpDir(),
+    trace: (event) => events.push(event),
+  })
+  await agent.run('u1', 'hi', { requestId: 'r1' })
+  assert.ok(events.includes('agent.run.start'))
+  assert.ok(events.includes('agent.step.start'))
+  assert.ok(events.includes('agent.step.final_reply'))
+  assert.ok(events.includes('agent.run.end'))
+})
+
+test('trace payload 带 requestId', async () => {
+  const events = []
+  const openai = fakeOpenAI([{ choices: [{ message: { content: 'ok' } }] }])
+  const agent = createAgent({
+    openai,
+    plmClient: {},
+    config,
+    schema,
+    memoryDir: tmpDir(),
+    trace: (event, payload) => events.push({ event, payload }),
+  })
+  await agent.run('u1', 'hi', { requestId: 'rid_1' })
+  const start = events.find((e) => e.event === 'agent.run.start')
+  assert.strictEqual(start.payload.requestId, 'rid_1')
+})
+
+test('OpenAI 瞬时失败后重试成功', async () => {
+  let n = 0
+  const openai = {
+    chat: {
+      completions: {
+        create: async () => {
+          n += 1
+          if (n === 1) throw new Error('temporary')
+          return { choices: [{ message: { content: '重试成功' } }] }
+        },
+      },
+    },
+  }
+  const events = []
+  const cfg = { ...config, openaiMaxRetries: 1 }
+  const agent = createAgent({ openai, plmClient: {}, config: cfg, schema, memoryDir: tmpDir(), trace: (e) => events.push(e) })
+  const out = await agent.run('u1', 'x')
+  assert.strictEqual(out.reply, '重试成功')
+  assert.ok(events.includes('agent.openai.retry'))
+})
+
+test('OpenAI 重试耗尽返回降级', async () => {
+  const openai = { chat: { completions: { create: async () => { throw new Error('down') } } } }
+  const cfg = { ...config, openaiMaxRetries: 1 }
+  const agent = createAgent({ openai, plmClient: {}, config: cfg, schema, memoryDir: tmpDir() })
+  const out = await agent.run('u1', 'x')
+  assert.match(out.reply, /服务暂不可用/)
+})
+
+test('agent 内部输出契约守卫：未知 cardAction 降级', async () => {
+  const openai = fakeOpenAI([
+    { choices: [{ message: { content: null, tool_calls: [
+      { id: 't1', function: { name: 'prepare_create_part', arguments: JSON.stringify({ values: { material_name: '板', project_number: 'p1' } }) } },
+    ] } }] },
+  ])
+  const badTools = {
+    getToolDefinitions: () => [],
+    executeTool: async () => ({ cardAction: { type: 'other_action' } }),
+  }
+  const agent = createAgent({ openai, plmClient: {}, config, schema, memoryDir: tmpDir(), toolsMod: badTools })
+  const out = await agent.run('u1', 'x')
+  assert.match(out.reply, /服务暂不可用/)
+})
+
+test('拿到 cardAction 后停止执行后续 tool_call', async () => {
+  const openai = fakeOpenAI([
+    { choices: [{ message: { content: null, tool_calls: [
+      { id: 't1', function: { name: 'prepare_create_part', arguments: JSON.stringify({ values: { material_name: '板', project_number: 'p1' } }) } },
+      { id: 't2', function: { name: 'list_field_options', arguments: JSON.stringify({ field: 'project_number' }) } },
+    ] } }] },
+  ])
+  const calls = []
+  const toolsSpy = {
+    getToolDefinitions: () => [],
+    executeTool: async (name) => {
+      calls.push(name)
+      if (name === 'prepare_create_part') return { cardAction: { type: 'confirm_create', values: { material_name: '板', project_number: 'p1' } } }
+      return { result: [] }
+    },
+  }
+  const agent = createAgent({ openai, plmClient: {}, config, schema, memoryDir: tmpDir(), toolsMod: toolsSpy })
+  const out = await agent.run('u1', 'x')
+  assert.strictEqual(out.cardAction.type, 'confirm_create')
+  assert.deepStrictEqual(calls, ['prepare_create_part'])
+})
+
+test('agent.tool.error payload 含 toolArgsSize', async () => {
+  const events = []
+  const argsText = JSON.stringify({ field: 'project_number' })
+  const openai = fakeOpenAI([
+    { choices: [{ message: { content: null, tool_calls: [
+      { id: 't1', function: { name: 'list_field_options', arguments: argsText } },
+    ] } }] },
+  ])
+  const badTools = {
+    getToolDefinitions: () => [],
+    executeTool: async () => { throw new Error('boom') },
+  }
+  const agent = createAgent({
+    openai,
+    plmClient: {},
+    config: { ...config, maxSteps: 1 },
+    schema,
+    memoryDir: tmpDir(),
+    toolsMod: badTools,
+    trace: (event, payload) => events.push({ event, payload }),
+  })
+  await agent.run('u1', 'x', { requestId: 'rid_x' })
+  const errEvt = events.find((e) => e.event === 'agent.tool.error')
+  assert.ok(errEvt)
+  assert.strictEqual(errEvt.payload.toolArgsSize, argsText.length)
+})
+
+test('tool arguments 超限时触发 args_too_large 并降级', async () => {
+  const events = []
+  const longArgs = JSON.stringify({ field: 'x'.repeat(80) })
+  const openai = fakeOpenAI([
+    { choices: [{ message: { content: null, tool_calls: [
+      { id: 't1', function: { name: 'list_field_options', arguments: longArgs } },
+    ] } }] },
+  ])
+  const agent = createAgent({
+    openai,
+    plmClient: {},
+    config: { ...config, maxSteps: 1, maxToolArgsSize: 20 },
+    schema,
+    memoryDir: tmpDir(),
+    trace: (event, payload) => events.push({ event, payload }),
+  })
+  const out = await agent.run('u1', 'x', { requestId: 'rid_y' })
+  assert.match(out.reply, /超时|重试/)
+  const tooLarge = events.find((e) => e.event === 'agent.tool.args_too_large')
+  assert.ok(tooLarge)
+  assert.strictEqual(tooLarge.payload.limit, 20)
+})

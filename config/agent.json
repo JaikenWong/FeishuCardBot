@@ -2,7 +2,13 @@
   "model": "",
   "systemPrompt": "你是 PLM 物料助手。只处理物料创建与查询相关请求；无关话题礼貌拒绝。需要某字段可选项时调用 list_field_options 查询。",
   "topicBoundary": "仅 PLM / 物料领域",
-  "allowedTools": ["list_field_options", "prepare_create_part"],
+  "allowedTools": [
+    "list_field_options",
+    "prepare_create_part"
+  ],
   "maxSteps": 6,
-  "maxHistory": 20
+  "maxHistory": 20,
+  "openaiMaxRetries": 1,
+  "callbackDedupeTtlMs": 300000,
+  "maxRequestsPerMinute": 20
 }

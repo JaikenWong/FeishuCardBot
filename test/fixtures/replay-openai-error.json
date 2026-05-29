@@ -1,0 +1,14 @@
+{
+  "name": "openai-error-flow",
+  "openaiMaxRetries": 1,
+  "mockResponses": [
+    { "__throw": true, "message": "net error 1" },
+    { "__throw": true, "message": "net error 2" }
+  ],
+  "turns": [
+    {
+      "user": "帮我建料",
+      "expect": { "type": "reply", "contains": "服务暂不可用", "notCardAction": true }
+    }
+  ]
+}

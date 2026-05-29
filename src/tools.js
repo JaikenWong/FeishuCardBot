@@ -4,6 +4,9 @@
  * prepare_create_part 只返回卡片动作，真正创建走卡片回调。
  */
 const formConfig = require('./form-config')
+const FIELD_NAME_RE = /^[a-z][a-z0-9_]*$/
+const MAX_FIELD_NAME_LEN = 40
+const MAX_VALUE_LEN = 200
 
 const ALL_TOOLS = {
   list_field_options: {
@@ -40,18 +43,44 @@ function getToolDefinitions(allowedTools) {
   return allowedTools.map((n) => ALL_TOOLS[n]).filter(Boolean)
 }
 
+function normalizeString(v) {
+  return typeof v === 'string' ? v.trim() : v
+}
+
 async function executeTool(name, args, deps) {
   const { schema, client } = deps
   if (name === 'list_field_options') {
-    const field = schema.fields.find((f) => f.name === args.field)
+    const fieldArg = normalizeString(args?.field || '')
+    if (!fieldArg || typeof fieldArg !== 'string') {
+      return { result: { error: 'field 参数不能为空' } }
+    }
+    if (fieldArg.length > MAX_FIELD_NAME_LEN || !FIELD_NAME_RE.test(fieldArg)) {
+      return { result: { error: 'field 参数格式非法' } }
+    }
+    const field = schema.fields.find((f) => f.name === fieldArg)
     if (!field) return { result: { error: `未知字段: ${args.field}` } }
     const { options, unavailable } = await formConfig.resolveFieldOptions(field, client)
-    return { result: { field: args.field, options, unavailable } }
+    return { result: { field: fieldArg, options, unavailable } }
   }
   if (name === 'prepare_create_part') {
+    if (!args?.values || typeof args.values !== 'object' || Array.isArray(args.values)) {
+      return { result: { error: 'values 参数必须是对象' } }
+    }
+    const allowedFields = new Set(schema.fields.map((f) => f.name))
+    const values = {}
+    for (const [k, v] of Object.entries(args.values)) {
+      if (!allowedFields.has(k)) return { result: { error: `未知字段: ${k}` } }
+      const val = normalizeString(v)
+      if (typeof val === 'string' && val.length > MAX_VALUE_LEN) {
+        return { result: { error: `字段 ${k} 值过长` } }
+      }
+      values[k] = val
+    }
     const required = schema.fields.filter((f) => f.required).map((f) => f.name)
-    const values = args.values || {}
-    const missing = required.filter((n) => !values[n])
+    const missing = required.filter((n) => {
+      const v = values[n]
+      return v == null || String(v).trim() === ''
+    })
     if (missing.length) return { result: { error: `缺少必填字段: ${missing.join(', ')}` } }
     return { cardAction: { type: 'confirm_create', values } }
   }

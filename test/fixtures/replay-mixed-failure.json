@@ -1,0 +1,32 @@
+{
+  "name": "mixed-failure-flow",
+  "maxSteps": 2,
+  "openaiMaxRetries": 0,
+  "mockResponses": [
+    {
+      "choices": [
+        {
+          "message": {
+            "content": null,
+            "tool_calls": [
+              {
+                "id": "t1",
+                "function": {
+                  "name": "list_field_options",
+                  "arguments": "{bad"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    { "__throw": true, "message": "openai down" }
+  ],
+  "turns": [
+    {
+      "user": "先查再创建",
+      "expect": { "type": "reply", "contains": "服务暂不可用", "notCardAction": true }
+    }
+  ]
+}

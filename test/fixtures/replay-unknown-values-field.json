@@ -1,0 +1,30 @@
+{
+  "name": "unknown-values-field-flow",
+  "maxSteps": 1,
+  "mockResponses": [
+    {
+      "choices": [
+        {
+          "message": {
+            "content": null,
+            "tool_calls": [
+              {
+                "id": "t1",
+                "function": {
+                  "name": "prepare_create_part",
+                  "arguments": "{\"values\":{\"material_name\":\"板\",\"project_number\":\"p1\",\"hack\":\"x\"}}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "user": "建料并带未知字段",
+      "expect": { "type": "reply", "contains": "处理超时", "notCardAction": true }
+    }
+  ]
+}

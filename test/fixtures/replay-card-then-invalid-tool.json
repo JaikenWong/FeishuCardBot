@@ -1,0 +1,37 @@
+{
+  "name": "card-then-invalid-tool-flow",
+  "maxSteps": 1,
+  "mockResponses": [
+    {
+      "choices": [
+        {
+          "message": {
+            "content": null,
+            "tool_calls": [
+              {
+                "id": "t1",
+                "function": {
+                  "name": "prepare_create_part",
+                  "arguments": "{\"values\":{\"material_name\":\"板\",\"project_number\":\"p1\"}}"
+                }
+              },
+              {
+                "id": "t2",
+                "function": {
+                  "name": "create_part_directly",
+                  "arguments": "{}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "user": "创建物料",
+      "expect": { "type": "cardAction", "actionType": "confirm_create" }
+    }
+  ]
+}

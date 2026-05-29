@@ -1,0 +1,17 @@
+{
+  "name": "basic-flow",
+  "turns": [
+    {
+      "user": "今天天气怎么样",
+      "expect": { "type": "reply", "contains": "仅支持" }
+    },
+    {
+      "user": "有哪些项目号",
+      "expect": { "type": "reply", "contains": "项目号可选" }
+    },
+    {
+      "user": "开始建料",
+      "expect": { "type": "cardAction", "actionType": "confirm_create" }
+    }
+  ]
+}

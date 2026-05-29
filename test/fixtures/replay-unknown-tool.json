@@ -1,0 +1,30 @@
+{
+  "name": "unknown-tool-flow",
+  "maxSteps": 1,
+  "mockResponses": [
+    {
+      "choices": [
+        {
+          "message": {
+            "content": null,
+            "tool_calls": [
+              {
+                "id": "t1",
+                "function": {
+                  "name": "create_part_directly",
+                  "arguments": "{}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "user": "直接创建",
+      "expect": { "type": "reply", "contains": "处理超时", "notCardAction": true }
+    }
+  ]
+}

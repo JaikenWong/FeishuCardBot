@@ -1,0 +1,30 @@
+{
+  "name": "long-args-flow",
+  "maxSteps": 1,
+  "mockResponses": [
+    {
+      "choices": [
+        {
+          "message": {
+            "content": null,
+            "tool_calls": [
+              {
+                "id": "t1",
+                "function": {
+                  "name": "list_field_options",
+                  "arguments": "{\"field\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "user": "查询超长字段",
+      "expect": { "type": "reply", "contains": "处理超时", "notCardAction": true }
+    }
+  ]
+}

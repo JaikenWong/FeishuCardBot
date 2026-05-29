@@ -2,9 +2,9 @@
  * 飞书机器人 - WebSocket 长连接模式
  *
  * 功能：
- * 1. 用户发送消息时，推送「新建部件」消息卡片
- * 2. 用户填写表单并点击「确定创建」后，接收卡片回调
- * 3. 调用 PLM 系统接口创建部件，返回结果卡片
+ * 1. 用户发送消息时，Agent 多轮对话收集物料字段
+ * 2. 字段收集齐后弹预填确认卡片
+ * 3. 用户确认后走卡片回调创建部件，返回结果卡片
  *
  * 启动方式：node src/index.js
  */
@@ -16,8 +16,16 @@ const {
   EventDispatcher,
   LoggerLevel,
 } = require('@larksuiteoapi/node-sdk')
+const OpenAI = require('openai')
+const { createAgent } = require('./agent')
 const { buildCreatePartCard, buildResultCard } = require('./card-template')
 const { createPart } = require('./plm-client')
+const formConfig = require('./form-config')
+const { appendHistory } = require('./memory')
+const { createHandlers } = require('./handlers')
+const { createAuditLogger } = require('./audit-log')
+const { runDoctor } = require('./doctor')
+const agentConfig = require('../config/agent.json')
 
 // ============================================
 // 配置
@@ -26,8 +34,19 @@ const { createPart } = require('./plm-client')
 const APP_ID = process.env.FEISHU_APP_ID
 const APP_SECRET = process.env.FEISHU_APP_SECRET
 
-if (!APP_ID || !APP_SECRET) {
-  console.error('❌ 请在 .env 文件中配置 FEISHU_APP_ID 和 FEISHU_APP_SECRET')
+const OPENAI_BASE_URL = process.env.OPENAI_BASE_URL
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY
+const OPENAI_MODEL = process.env.OPENAI_MODEL
+const AUDIT_LOG_PATH = process.env.AUDIT_LOG_PATH || 'data/audit/audit.jsonl'
+
+const formSchema = formConfig.loadSchema()
+const runtimeAgentConfig = { ...agentConfig, model: agentConfig.model || OPENAI_MODEL }
+const doctor = runDoctor({ schema: formSchema, agentConfig: runtimeAgentConfig })
+if (!doctor.ok) {
+  console.error('❌ 启动前体检失败')
+  if (!doctor.envCheck.ok) console.error(`缺失环境变量: ${doctor.envCheck.missing.join(', ')}`)
+  if (doctor.schemaError) console.error(`Schema 错误: ${doctor.schemaError}`)
+  if (!doctor.cfgCheck.ok) console.error(`配置错误: ${doctor.cfgCheck.errors.join(' | ')}`)
   process.exit(1)
 }
 
@@ -40,6 +59,35 @@ const client = new Client({
   appSecret: APP_SECRET,
   appType: 0, // 自建应用
   domain: 0,  // Feishu
+})
+
+// ============================================
+// 初始化 Agent
+// ============================================
+
+const openai = new OpenAI({ baseURL: OPENAI_BASE_URL, apiKey: OPENAI_API_KEY })
+const audit = createAuditLogger({ filePath: AUDIT_LOG_PATH })
+const agent = createAgent({
+  openai,
+  plmClient: require('./plm-client'),
+  config: runtimeAgentConfig,
+  schema: formSchema,
+  trace: audit.trace,
+})
+
+const { handleMessage, handleCardCallback } = createHandlers({
+  agent,
+  client,
+  buildCreatePartCard,
+  buildResultCard,
+  createPart,
+  appendHistory,
+  maxHistory: agentConfig.maxHistory,
+  topicBoundary: agentConfig.topicBoundary,
+  schema: formSchema,
+  trace: audit.trace,
+  callbackDedupeTtlMs: agentConfig.callbackDedupeTtlMs,
+  maxRequestsPerMinute: agentConfig.maxRequestsPerMinute,
 })
 
 // ============================================
@@ -63,135 +111,18 @@ const eventDispatcher = new EventDispatcher({
 })
 
 // ============================================
-// 消息处理：用户发消息时推送卡片
-// ============================================
-
-async function handleMessage(data) {
-  try {
-    const { sender, message } = data
-
-    if (!message || !sender) {
-      return
-    }
-
-    const openId = sender?.sender_id?.open_id
-    const chatId = message?.chat_id
-    const msgType = message?.message_type
-
-    console.log(`👤 用户消息: openId=${openId}, chatId=${chatId}, type=${msgType}`)
-
-    // 发送「新建部件」卡片
-    await sendCreatePartCard(chatId)
-  } catch (err) {
-    console.error('❌ 处理消息失败:', err)
-  }
-}
-
-/**
- * 发送「新建部件」卡片
- */
-async function sendCreatePartCard(chatId) {
-  try {
-    const card = buildCreatePartCard()
-
-    const res = await client.im.message.create({
-      params: {
-        receive_id_type: 'chat_id',
-      },
-      data: {
-        receive_id: chatId,
-        msg_type: 'interactive',
-        content: JSON.stringify(card),
-      },
-    })
-
-    console.log('📤 卡片发送成功:', res?.data?.message_id)
-  } catch (err) {
-    console.error('❌ 发送卡片失败:', err)
-  }
-}
-
-// ============================================
-// 卡片回调处理：用户点击「确定创建」
-// ============================================
-
-async function handleCardCallback(data) {
-  try {
-    console.log('🔍 回调完整数据:', JSON.stringify(data, null, 2))
-
-    const { action, operator } = data
-    const openId = operator?.open_id || data.open_id
-
-    // form_submit 回调：action.action_type === 'form_submit'
-    // 或者通过 action.name 判断
-    const isSubmit =
-      action?.action_type === 'form_submit' ||
-      action?.name === 'submit_btn' ||
-      action?.value?.action === 'submit_create_part'
-
-    if (!isSubmit) {
-      console.log('⏭ 非提交按钮，忽略')
-      return
-    }
-
-    // 表单数据位置：
-    // - form_submit 回调：action.form_value
-    // - 兼容旧方式：data.form_value
-    const formValue = action?.form_value || data.form_value || {}
-    const formData = {
-      materialName: formValue.material_name || '',
-      projectNumber: formValue.project_number || '',
-      library: formValue.library || '',
-      view: formValue.view || '',
-      folder: formValue.folder || '',
-      category: formValue.category || '',
-    }
-
-    console.log('📝 表单数据:', JSON.stringify(formData, null, 2))
-
-    // 调用 PLM 接口创建部件
-    const result = await createPart(formData)
-
-    // 发送结果卡片给用户
-    await sendResultCard(openId, result)
-  } catch (err) {
-    console.error('❌ 处理卡片回调失败:', err)
-  }
-}
-
-/**
- * 发送结果卡片
- */
-async function sendResultCard(openId, result) {
-  try {
-    const card = buildResultCard(result)
-
-    const res = await client.im.message.create({
-      params: {
-        receive_id_type: 'open_id',
-      },
-      data: {
-        receive_id: openId,
-        msg_type: 'interactive',
-        content: JSON.stringify(card),
-      },
-    })
-
-    console.log('📤 结果卡片发送成功:', res?.data?.message_id)
-  } catch (err) {
-    console.error('❌ 发送结果卡片失败:', err)
-  }
-}
-
-// ============================================
 // 启动 WebSocket 长连接
 // ============================================
 
 console.log('========================================')
-console.log('🤖 飞书机器人 - 新建部件卡片')
+console.log('🤖 飞书 PLM Agent - 对话式物料助手')
 console.log('========================================')
 console.log(`App ID: ${APP_ID}`)
+console.log(`Model: ${OPENAI_MODEL}`)
 console.log(`PLM API: ${process.env.PLM_API_BASE_URL || '(未配置)'}`)
+console.log(`Allowed Tools: ${(agentConfig.allowedTools || []).join(', ')}`)
+console.log(`Schema Fields: ${formSchema.fields.length}`)
+console.log(`Required Fields: ${formSchema.fields.filter((f) => f.required).map((f) => f.name).join(', ')}`)
 console.log('========================================')
 
 const wsClient = new WSClient({

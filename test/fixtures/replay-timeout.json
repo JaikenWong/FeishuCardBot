@@ -1,0 +1,48 @@
+{
+  "name": "timeout-flow",
+  "maxSteps": 2,
+  "mockResponses": [
+    {
+      "choices": [
+        {
+          "message": {
+            "content": null,
+            "tool_calls": [
+              {
+                "id": "t1",
+                "function": {
+                  "name": "list_field_options",
+                  "arguments": "{\"field\":\"project_number\"}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "choices": [
+        {
+          "message": {
+            "content": null,
+            "tool_calls": [
+              {
+                "id": "t2",
+                "function": {
+                  "name": "list_field_options",
+                  "arguments": "{\"field\":\"project_number\"}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "user": "继续",
+      "expect": { "type": "reply", "contains": "处理超时", "notCardAction": true }
+    }
+  ]
+}

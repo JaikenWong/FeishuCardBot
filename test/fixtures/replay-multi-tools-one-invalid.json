@@ -1,0 +1,37 @@
+{
+  "name": "multi-tools-one-invalid-flow",
+  "maxSteps": 1,
+  "mockResponses": [
+    {
+      "choices": [
+        {
+          "message": {
+            "content": null,
+            "tool_calls": [
+              {
+                "id": "t1",
+                "function": {
+                  "name": "list_field_options",
+                  "arguments": "{\"field\":\"project_number\"}"
+                }
+              },
+              {
+                "id": "t2",
+                "function": {
+                  "name": "create_part_directly",
+                  "arguments": "{}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "user": "先查项目再直接创建",
+      "expect": { "type": "reply", "contains": "处理超时", "notCardAction": true }
+    }
+  ]
+}

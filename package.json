@@ -6,7 +6,14 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
-    "test": "node --test"
+    "test": "node --test",
+    "audit:summary": "node src/audit-cli.js summary",
+    "audit:timeline": "node src/audit-cli.js timeline",
+    "doctor": "node src/doctor-cli.js --strict",
+    "test:harness": "node --test test/harness-flow.test.js",
+    "harness:check": "node src/harness-check-cli.js",
+    "replay": "node src/replay-cli.js",
+    "ci:check": "node src/doctor-cli.js --skip-env --strict && npm run harness:check && npm run replay && npm run test:harness && npm test"
   },
   "dependencies": {
     "@larksuiteoapi/node-sdk": "^1.30.0",
