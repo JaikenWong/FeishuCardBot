@@ -62,7 +62,11 @@ function buildSummary(fields, prefill) {
   if (keys.length === 0) return []
   const lines = fields
     .filter((f) => prefill[f.name] != null)
-    .map((f) => `- **${f.label}**：${prefill[f.name]}`)
+    .map((f) => {
+      const raw = String(prefill[f.name])
+      const label = f.options?.find((o) => o.value === raw)?.text
+      return `- **${f.label}**：${label || raw}`
+    })
     .join('\n')
   return [{ tag: 'markdown', content: `**待确认信息**\n${lines}` }]
 }
