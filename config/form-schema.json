@@ -1,0 +1,61 @@
+{
+  "header": { "title": "🔧 新建部件", "template": "blue" },
+  "submit": { "text": "✅ 确定创建", "action": "submit_create_part" },
+  "fields": [
+    {
+      "name": "material_name",
+      "type": "input",
+      "label": "物料名称",
+      "placeholder": "请输入物料名称",
+      "required": true,
+      "maxLength": 100
+    },
+    {
+      "name": "project_number",
+      "type": "select",
+      "label": "物料项目号",
+      "placeholder": "请选择物料项目号",
+      "required": true,
+      "optionSource": { "type": "plm", "endpoint": "projects" }
+    },
+    {
+      "name": "library",
+      "type": "select",
+      "label": "所在库",
+      "placeholder": "请选择所在库",
+      "required": true,
+      "optionSource": { "type": "plm", "endpoint": "libraries" }
+    },
+    {
+      "name": "view",
+      "type": "select",
+      "label": "视图",
+      "placeholder": "请选择视图",
+      "required": true,
+      "optionSource": {
+        "type": "static",
+        "options": [
+          { "text": "设计视图", "value": "design" },
+          { "text": "制造视图", "value": "manufacturing" },
+          { "text": "工艺视图", "value": "process" }
+        ]
+      }
+    },
+    {
+      "name": "folder",
+      "type": "select",
+      "label": "所在文件夹",
+      "placeholder": "请选择所在文件夹",
+      "required": true,
+      "optionSource": { "type": "plm", "endpoint": "folders" }
+    },
+    {
+      "name": "category",
+      "type": "select",
+      "label": "物料分类",
+      "placeholder": "请选择物料分类",
+      "required": true,
+      "optionSource": { "type": "plm", "endpoint": "categories" }
+    }
+  ]
+}
