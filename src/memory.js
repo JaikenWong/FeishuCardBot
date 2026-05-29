@@ -7,14 +7,18 @@ const path = require('path')
 const DEFAULT_DIR = path.join(__dirname, '..', 'data', 'memory')
 
 function filePath(openId, baseDir) {
-  return path.join(baseDir, `${openId}.json`)
+  const safeBase = path.resolve(baseDir)
+  const p = path.resolve(path.join(baseDir, `${openId}.json`))
+  if (!p.startsWith(safeBase + path.sep)) throw new Error('invalid openId')
+  return p
 }
 
 function loadHistory(openId, baseDir = DEFAULT_DIR) {
   try {
     return JSON.parse(fs.readFileSync(filePath(openId, baseDir), 'utf8'))
-  } catch {
-    return []
+  } catch (e) {
+    if (e.code === 'ENOENT') return []
+    throw e
   }
 }
 
@@ -28,8 +32,9 @@ function appendHistory(openId, messages, maxHistory = 20, baseDir = DEFAULT_DIR)
 function clearHistory(openId, baseDir = DEFAULT_DIR) {
   try {
     fs.unlinkSync(filePath(openId, baseDir))
-  } catch {
-    /* 不存在则忽略 */
+  } catch (e) {
+    if (e.code === 'ENOENT') return
+    throw e
   }
 }
 
