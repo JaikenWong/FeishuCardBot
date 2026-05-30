@@ -2,7 +2,7 @@ const { test } = require('node:test')
 const assert = require('node:assert')
 const path = require('path')
 const { createAgent } = require('../src/agent')
-const { loadReplayFixture, runReplay, assertReplay, summarizeReplayResults } = require('../src/replay')
+const { loadReplayFixture, runReplay, assertReplay, summarizeReplayResults, validateReplayFixture } = require('../src/replay')
 
 function fakeOpenAI(responses) {
   let i = 0
@@ -259,4 +259,23 @@ test('summarizeReplayResults 分类统计', () => {
     otherReply: 1,
     empty: 1,
   })
+})
+
+test('validateReplayFixture 对坏结构 fail-fast', () => {
+  assert.throws(
+    () => validateReplayFixture({ turns: [{ user: 'u1', expect: { type: 'reply' } }] }),
+    /name must be non-empty string/
+  )
+  assert.throws(
+    () => validateReplayFixture({ name: 'x', turns: [] }),
+    /turns must be non-empty array/
+  )
+  assert.throws(
+    () => validateReplayFixture({ name: 'x', turns: [{ user: '', expect: { type: 'reply' } }] }),
+    /turns\[0\]\.user must be non-empty string/
+  )
+  assert.throws(
+    () => validateReplayFixture({ name: 'x', turns: [{ user: 'u1' }] }),
+    /turns\[0\]\.expect must be object/
+  )
 })
