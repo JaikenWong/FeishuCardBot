@@ -82,6 +82,25 @@ test('harness-check 识别非法工具元素', () => {
   assert.ok(out.errors.some((e) => e.includes('仅允许非空字符串')))
 })
 
+test('harness-check 识别 allowedTools 非数组', () => {
+  const schema = { submit: { action: 'submit_create_part' }, fields: [{ name: 'material_name', required: true }] }
+  const config = {
+    allowedTools: '',
+    systemPrompt: 'sys',
+    topicBoundary: '仅 PLM / 物料领域',
+    maxSteps: 6,
+    maxHistory: 20,
+    maxToolArgsSize: 4096,
+    maxToolCallsPerStep: 5,
+    openaiMaxRetries: 1,
+    callbackDedupeTtlMs: 300000,
+    maxRequestsPerMinute: 20,
+  }
+  const out = runHarnessCheck({ schema, config })
+  assert.strictEqual(out.ok, false)
+  assert.ok(out.errors.some((e) => e.includes('allowedTools 必须是数组')))
+})
+
 test('harness-check 要求 list_field_options 在白名单', () => {
   const schema = { submit: { action: 'submit_create_part' }, fields: [{ name: 'material_name', required: true }] }
   const config = {

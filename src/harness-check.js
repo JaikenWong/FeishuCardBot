@@ -8,32 +8,35 @@ const MAX_FIELD_NAME_LEN = 40
 function runHarnessCheck({ schema = formConfig.loadSchema(), config = agentConfig } = {}) {
   const errors = []
   const fields = Array.isArray(schema?.fields) ? schema.fields : []
-  const allowedTools = Array.isArray(config.allowedTools) ? config.allowedTools : []
+  const allowedTools = config.allowedTools
   const maxToolArgsSize = config.maxToolArgsSize
 
-  if (allowedTools.length === 0) {
+  if (!Array.isArray(allowedTools)) {
+    errors.push('allowedTools 必须是数组')
+  }
+  if (Array.isArray(allowedTools) && allowedTools.length === 0) {
     errors.push('allowedTools 不能为空')
   }
-  const badTools = allowedTools.filter((t) => typeof t !== 'string' || t.trim() === '')
+  const badTools = Array.isArray(allowedTools) ? allowedTools.filter((t) => typeof t !== 'string' || t.trim() === '') : []
   if (badTools.length > 0) {
     errors.push('allowedTools 仅允许非空字符串')
   }
 
-  if (!allowedTools.includes('prepare_create_part')) {
+  if (!Array.isArray(allowedTools) || !allowedTools.includes('prepare_create_part')) {
     errors.push('必须允许 prepare_create_part（创建二次确认）')
   }
-  if (!allowedTools.includes('list_field_options')) {
+  if (!Array.isArray(allowedTools) || !allowedTools.includes('list_field_options')) {
     errors.push('必须允许 list_field_options（字段选项查询）')
   }
 
-  if (allowedTools.some((t) => /create_part|create_material/i.test(t) && t !== 'prepare_create_part')) {
+  if (Array.isArray(allowedTools) && allowedTools.some((t) => /create_part|create_material/i.test(t) && t !== 'prepare_create_part')) {
     errors.push('禁止直接创建类 tool 出现在白名单')
   }
-  const unknownTools = allowedTools.filter((t) => !ALL_TOOLS[t])
+  const unknownTools = Array.isArray(allowedTools) ? allowedTools.filter((t) => !ALL_TOOLS[t]) : []
   if (unknownTools.length) {
     errors.push(`allowedTools 含未知工具: ${unknownTools.join(', ')}`)
   }
-  const dupTools = allowedTools.filter((t, i) => allowedTools.indexOf(t) !== i)
+  const dupTools = Array.isArray(allowedTools) ? allowedTools.filter((t, i) => allowedTools.indexOf(t) !== i) : []
   if (dupTools.length) {
     errors.push(`allowedTools 含重复工具: ${Array.from(new Set(dupTools)).join(', ')}`)
   }
