@@ -10,6 +10,10 @@ function runHarnessCheck({ schema = formConfig.loadSchema(), config = agentConfi
   if (allowedTools.length === 0) {
     errors.push('allowedTools 不能为空')
   }
+  const badTools = allowedTools.filter((t) => typeof t !== 'string' || t.trim() === '')
+  if (badTools.length > 0) {
+    errors.push('allowedTools 仅允许非空字符串')
+  }
 
   if (!allowedTools.includes('prepare_create_part')) {
     errors.push('必须允许 prepare_create_part（创建二次确认）')

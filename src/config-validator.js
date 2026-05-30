@@ -48,6 +48,10 @@ function validateAgentRuntimeConfig({ schema, agentConfig }) {
   if (!Array.isArray(tools)) {
     errors.push('agent.allowedTools 必须是数组')
   } else {
+    const badTools = tools.filter((t) => typeof t !== 'string' || t.trim() === '')
+    if (badTools.length > 0) {
+      errors.push('agent.allowedTools 仅允许非空字符串')
+    }
     const dupTools = tools.filter((t, i) => tools.indexOf(t) !== i)
     if (dupTools.length > 0) {
       errors.push(`agent.allowedTools 含重复工具: ${Array.from(new Set(dupTools)).join(', ')}`)
