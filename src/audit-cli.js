@@ -25,6 +25,9 @@ function main() {
       status: x.status,
       eventCount: x.eventCount,
       durationMs: x.durationMs,
+      toolErrorCount: x.toolErrorCount,
+      toolResultErrorCount: x.toolResultErrorCount,
+      openaiErrorCount: x.openaiErrorCount,
       lastTs: x.lastTs,
     }))
     console.table(out)

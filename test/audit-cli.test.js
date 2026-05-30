@@ -23,6 +23,9 @@ test('audit-cli summary 可执行', () => {
   assert.match(out, /r1/)
   assert.match(out, /durationMs/)
   assert.match(out, /2000/)
+  assert.match(out, /toolErrorCount/)
+  assert.match(out, /toolResultErrorCount/)
+  assert.match(out, /openaiErrorCount/)
 })
 
 test('audit-cli timeline 可执行', () => {

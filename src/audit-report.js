@@ -33,6 +33,7 @@ function pickRangeTs(records = []) {
 
 function summarizeRequest(requestId, records = []) {
   const { firstTs, lastTs } = pickRangeTs(records)
+  const events = records.map((r) => r.event)
   return {
     requestId,
     status: inferStatus(records),
@@ -40,7 +41,10 @@ function summarizeRequest(requestId, records = []) {
     firstTs,
     lastTs,
     durationMs: calcDurationMs(firstTs, lastTs),
-    events: records.map((r) => r.event),
+    toolErrorCount: events.filter((e) => e === 'agent.tool.error').length,
+    toolResultErrorCount: events.filter((e) => e === 'agent.tool.result_error').length,
+    openaiErrorCount: events.filter((e) => e === 'agent.run.error').length,
+    events,
   }
 }
 

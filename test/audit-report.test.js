@@ -29,14 +29,19 @@ test('inferStatus: ok/error/timeout/incomplete', () => {
 test('summarizeRequest 汇总基础字段', () => {
   const rows = [
     rec('2026-01-01T00:00:00.000Z', 'agent.run.start', 'r1'),
+    rec('2026-01-01T00:00:00.500Z', 'agent.tool.error', 'r1'),
+    rec('2026-01-01T00:00:00.600Z', 'agent.tool.result_error', 'r1'),
     rec('2026-01-01T00:00:01.000Z', 'agent.run.end', 'r1'),
   ]
   const s = summarizeRequest('r1', rows)
   assert.strictEqual(s.requestId, 'r1')
-  assert.strictEqual(s.eventCount, 2)
+  assert.strictEqual(s.eventCount, 4)
   assert.strictEqual(s.firstTs, '2026-01-01T00:00:00.000Z')
   assert.strictEqual(s.lastTs, '2026-01-01T00:00:01.000Z')
   assert.strictEqual(s.durationMs, 1000)
+  assert.strictEqual(s.toolErrorCount, 1)
+  assert.strictEqual(s.toolResultErrorCount, 1)
+  assert.strictEqual(s.openaiErrorCount, 0)
 })
 
 test('buildAuditReport 按 lastTs 倒序并 limit', () => {
