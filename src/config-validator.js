@@ -119,6 +119,9 @@ function validateAgentRuntimeConfig({ schema, agentConfig }) {
   if (dupNames.length > 0) errors.push(`form-schema 字段名重复: ${Array.from(new Set(dupNames)).join(', ')}`)
 
   const submitText = String(schema?.submit?.text || '').trim()
+  if (!schema?.submit || typeof schema.submit !== 'object' || Array.isArray(schema.submit)) {
+    errors.push('schema.submit 必须是对象')
+  }
   if (!submitText) {
     errors.push('schema.submit.text 不能为空')
   } else if (submitText.length > 30) {

@@ -117,6 +117,27 @@ test('submit.action 非法时报错', () => {
   assert.ok(out.errors.some((e) => e.includes('schema.submit.action 必须为 submit_create_part')))
 })
 
+test('submit 不是对象时报错', () => {
+  const schema = { submit: [], fields: [{ name: 'material_name', type: 'input', required: true }] }
+  const out = validateAgentRuntimeConfig({
+    schema,
+    agentConfig: {
+      allowedTools: ['list_field_options', 'prepare_create_part'],
+      systemPrompt: 'sys',
+      topicBoundary: '仅 PLM / 物料领域',
+      maxSteps: 6,
+      maxHistory: 20,
+      openaiMaxRetries: 1,
+      callbackDedupeTtlMs: 300000,
+      maxRequestsPerMinute: 20,
+      maxToolArgsSize: 4096,
+      maxToolCallsPerStep: 5,
+    },
+  })
+  assert.strictEqual(out.ok, false)
+  assert.ok(out.errors.some((e) => e.includes('schema.submit 必须是对象')))
+})
+
 test('openaiMaxRetries 非法时报错', () => {
   const schema = { fields: [{ name: 'material_name', type: 'input', required: true }] }
   const out = validateAgentRuntimeConfig({
