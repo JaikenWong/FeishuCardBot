@@ -341,3 +341,27 @@ test('select static options value 重复时报错', () => {
   assert.strictEqual(out.ok, false)
   assert.ok(out.errors.some((e) => e.includes('optionSource.options.value 重复')))
 })
+
+test('schema 字段名重复时报错', () => {
+  const schema = {
+    fields: [
+      { name: 'material_name', type: 'input', required: true },
+      { name: 'material_name', type: 'select', required: false, optionSource: { type: 'static', options: [{ text: 'P1', value: 'p1' }] } },
+    ],
+  }
+  const out = validateAgentRuntimeConfig({
+    schema,
+    agentConfig: {
+      allowedTools: ['list_field_options', 'prepare_create_part'],
+      maxSteps: 6,
+      maxHistory: 20,
+      openaiMaxRetries: 1,
+      callbackDedupeTtlMs: 300000,
+      maxRequestsPerMinute: 20,
+      maxToolArgsSize: 4096,
+      maxToolCallsPerStep: 5,
+    },
+  })
+  assert.strictEqual(out.ok, false)
+  assert.ok(out.errors.some((e) => e.includes('字段名重复')))
+})

@@ -104,6 +104,9 @@ function validateAgentRuntimeConfig({ schema, agentConfig }) {
 
   const requiredFields = (schema?.fields || []).filter((f) => f.required)
   if (requiredFields.length === 0) errors.push('form-schema 至少要有一个 required 字段')
+  const names = (schema?.fields || []).map((f) => f?.name).filter(Boolean)
+  const dupNames = names.filter((x, i) => names.indexOf(x) !== i)
+  if (dupNames.length > 0) errors.push(`form-schema 字段名重复: ${Array.from(new Set(dupNames)).join(', ')}`)
 
   for (const f of schema?.fields || []) {
     if (!f.name) errors.push('form-schema 字段缺少 name')
