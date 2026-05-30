@@ -115,6 +115,13 @@ function validateAgentRuntimeConfig({ schema, agentConfig }) {
   const dupNames = names.filter((x, i) => names.indexOf(x) !== i)
   if (dupNames.length > 0) errors.push(`form-schema 字段名重复: ${Array.from(new Set(dupNames)).join(', ')}`)
 
+  const submitText = String(schema?.submit?.text || '').trim()
+  if (!submitText) {
+    errors.push('schema.submit.text 不能为空')
+  } else if (submitText.length > 30) {
+    errors.push('schema.submit.text 长度不能超过 30')
+  }
+
   for (const f of schema?.fields || []) {
     if (!f.name) errors.push('form-schema 字段缺少 name')
     if (f?.name && (typeof f.name !== 'string' || !FIELD_NAME_RE.test(f.name) || f.name.length > MAX_FIELD_NAME_LEN)) {
