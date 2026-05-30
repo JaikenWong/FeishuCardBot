@@ -25,3 +25,18 @@ test('checkReplayFixtures: 坏 fixture 失败', () => {
   assert.strictEqual(out.ok, false)
   assert.ok(out.errors.some((e) => e.includes('replay-bad.json')))
 })
+
+test('checkReplayFixtures: fixture name 重复失败', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'replay-fixtures-dup-'))
+  fs.writeFileSync(path.join(dir, 'replay-a.json'), JSON.stringify({
+    name: 'dup-name',
+    turns: [{ user: 'u1', expect: { type: 'reply', contains: 'x' } }],
+  }), 'utf8')
+  fs.writeFileSync(path.join(dir, 'replay-b.json'), JSON.stringify({
+    name: 'dup-name',
+    turns: [{ user: 'u2', expect: { type: 'reply', contains: 'y' } }],
+  }), 'utf8')
+  const out = checkReplayFixtures({ fixtureDir: dir })
+  assert.strictEqual(out.ok, false)
+  assert.ok(out.errors.some((e) => e.includes('fixture name 重复: dup-name')))
+})

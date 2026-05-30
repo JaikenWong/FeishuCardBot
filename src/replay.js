@@ -46,6 +46,9 @@ function validateReplayFixture(fixture, filePath = '') {
     if (expect.type === 'reply' && Object.prototype.hasOwnProperty.call(expect, 'actionType')) {
       throw new Error(`invalid replay fixture${where}: turns[${idx}].expect.actionType only allowed for cardAction`)
     }
+    if (expect.type === 'reply' && !Object.prototype.hasOwnProperty.call(expect, 'contains')) {
+      throw new Error(`invalid replay fixture${where}: turns[${idx}].expect.contains required for reply assertions`)
+    }
   })
 }
 

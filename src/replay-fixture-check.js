@@ -18,10 +18,18 @@ function checkReplayFixtures({ fixtureDir = path.join(__dirname, '..', 'test', '
     return { ok: false, files: [], errors }
   }
 
+  const seenNames = new Map()
   for (const file of files) {
     const fullPath = path.join(fixtureDir, file)
     try {
-      loadReplayFixture(fullPath)
+      const fixture = loadReplayFixture(fullPath)
+      const key = String(fixture.name).trim()
+      const prev = seenNames.get(key)
+      if (prev) {
+        errors.push(`fixture name 重复: ${key} (${prev}, ${file})`)
+      } else {
+        seenNames.set(key, file)
+      }
     } catch (e) {
       errors.push(`${file}: ${e.message}`)
     }

@@ -294,4 +294,8 @@ test('validateReplayFixture 对坏结构 fail-fast', () => {
     () => validateReplayFixture({ name: 'x', turns: [{ user: 'u1', expect: { type: 'reply', notCardAction: false } }] }),
     /expect\.notCardAction must be true/
   )
+  assert.throws(
+    () => validateReplayFixture({ name: 'x', turns: [{ user: 'u1', expect: { type: 'reply' } }] }),
+    /expect\.contains required for reply assertions/
+  )
 })
