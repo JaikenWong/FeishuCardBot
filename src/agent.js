@@ -18,6 +18,7 @@ function createAgent({ openai, plmClient, config, schema, memoryDir, memoryMod =
   const tracer = createTracer(trace)
   const openaiMaxRetries = Number.isInteger(config.openaiMaxRetries) ? config.openaiMaxRetries : 0
   const maxToolArgsSize = Number.isInteger(config.maxToolArgsSize) ? config.maxToolArgsSize : 4096
+  const maxToolCallsPerStep = Number.isInteger(config.maxToolCallsPerStep) ? config.maxToolCallsPerStep : 5
 
   async function callOpenAI(messages, toolDefs, requestId) {
     let attempt = 0
@@ -65,8 +66,17 @@ function createAgent({ openai, plmClient, config, schema, memoryDir, memoryMod =
         break
       }
 
+      const toolCalls = Array.isArray(msg.tool_calls) ? msg.tool_calls : []
+      if (toolCalls.length > maxToolCallsPerStep) {
+        tracer.emit('agent.tool_calls.truncated', {
+          step,
+          originalCount: toolCalls.length,
+          allowedCount: maxToolCallsPerStep,
+          requestId,
+        })
+      }
       let stop = false
-      for (const tc of msg.tool_calls) {
+      for (const tc of toolCalls.slice(0, maxToolCallsPerStep)) {
         tracer.emit('agent.tool.start', { step, name: tc.function.name, requestId })
         let args = {}
         const rawArgs = tc.function.arguments || '{}'

@@ -26,6 +26,7 @@ test('runDoctor 全通过', () => {
     maxHistory: 20,
     openaiMaxRetries: 1,
     maxToolArgsSize: 4096,
+    maxToolCallsPerStep: 5,
     callbackDedupeTtlMs: 300000,
     maxRequestsPerMinute: 20,
   }

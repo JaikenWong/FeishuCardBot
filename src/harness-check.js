@@ -45,6 +45,9 @@ function runHarnessCheck({ schema = formConfig.loadSchema(), config = agentConfi
   if (!Number.isInteger(config.maxRequestsPerMinute) || config.maxRequestsPerMinute < 1 || config.maxRequestsPerMinute > 120) {
     errors.push('maxRequestsPerMinute 必须显式配置且在 1-120 之间')
   }
+  if (!Number.isInteger(config.maxToolCallsPerStep) || config.maxToolCallsPerStep < 1 || config.maxToolCallsPerStep > 20) {
+    errors.push('maxToolCallsPerStep 必须显式配置且在 1-20 之间')
+  }
 
   return { ok: errors.length === 0, errors }
 }

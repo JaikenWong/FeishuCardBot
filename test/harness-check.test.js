@@ -7,6 +7,7 @@ test('harness-check 正常配置通过', () => {
   const config = {
     allowedTools: ['list_field_options', 'prepare_create_part'],
     maxToolArgsSize: 4096,
+    maxToolCallsPerStep: 5,
     openaiMaxRetries: 1,
     callbackDedupeTtlMs: 300000,
     maxRequestsPerMinute: 20,
@@ -17,7 +18,7 @@ test('harness-check 正常配置通过', () => {
 
 test('harness-check 识别直接创建工具违规', () => {
   const schema = { submit: { action: 'submit_create_part' }, fields: [{ name: 'material_name', required: true }] }
-  const config = { allowedTools: ['create_part'], maxToolArgsSize: 4096, openaiMaxRetries: 1, callbackDedupeTtlMs: 300000, maxRequestsPerMinute: 20 }
+  const config = { allowedTools: ['create_part'], maxToolArgsSize: 4096, maxToolCallsPerStep: 5, openaiMaxRetries: 1, callbackDedupeTtlMs: 300000, maxRequestsPerMinute: 20 }
   const out = runHarnessCheck({ schema, config })
   assert.strictEqual(out.ok, false)
   assert.ok(out.errors.some((e) => e.includes('禁止直接创建类 tool')))
@@ -25,7 +26,7 @@ test('harness-check 识别直接创建工具违规', () => {
 
 test('harness-check 识别 submit action 违规', () => {
   const schema = { submit: { action: 'bad_action' }, fields: [{ name: 'material_name', required: true }] }
-  const config = { allowedTools: ['prepare_create_part'], maxToolArgsSize: 4096, openaiMaxRetries: 1, callbackDedupeTtlMs: 300000, maxRequestsPerMinute: 20 }
+  const config = { allowedTools: ['prepare_create_part'], maxToolArgsSize: 4096, maxToolCallsPerStep: 5, openaiMaxRetries: 1, callbackDedupeTtlMs: 300000, maxRequestsPerMinute: 20 }
   const out = runHarnessCheck({ schema, config })
   assert.strictEqual(out.ok, false)
   assert.ok(out.errors.some((e) => e.includes('submit.action')))
@@ -33,7 +34,7 @@ test('harness-check 识别 submit action 违规', () => {
 
 test('harness-check 识别未知工具名', () => {
   const schema = { submit: { action: 'submit_create_part' }, fields: [{ name: 'material_name', required: true }] }
-  const config = { allowedTools: ['list_field_options', 'not_exist_tool'], maxToolArgsSize: 4096, openaiMaxRetries: 1, callbackDedupeTtlMs: 300000, maxRequestsPerMinute: 20 }
+  const config = { allowedTools: ['list_field_options', 'not_exist_tool'], maxToolArgsSize: 4096, maxToolCallsPerStep: 5, openaiMaxRetries: 1, callbackDedupeTtlMs: 300000, maxRequestsPerMinute: 20 }
   const out = runHarnessCheck({ schema, config })
   assert.strictEqual(out.ok, false)
   assert.ok(out.errors.some((e) => e.includes('未知工具')))
@@ -48,6 +49,7 @@ test('harness-check 要求 maxToolArgsSize 显式配置且合法', () => {
       openaiMaxRetries: 1,
       callbackDedupeTtlMs: 300000,
       maxRequestsPerMinute: 20,
+      maxToolCallsPerStep: 5,
     },
   })
   assert.strictEqual(out1.ok, false)
@@ -61,6 +63,7 @@ test('harness-check 要求 maxToolArgsSize 显式配置且合法', () => {
       openaiMaxRetries: 1,
       callbackDedupeTtlMs: 300000,
       maxRequestsPerMinute: 20,
+      maxToolCallsPerStep: 5,
     },
   })
   assert.strictEqual(out2.ok, false)
@@ -86,10 +89,12 @@ test('harness-check 要求其他护栏显式配置且合法', () => {
       openaiMaxRetries: 9,
       callbackDedupeTtlMs: 1,
       maxRequestsPerMinute: 999,
+      maxToolCallsPerStep: 99,
     },
   })
   assert.strictEqual(outRange.ok, false)
   assert.ok(outRange.errors.some((e) => e.includes('openaiMaxRetries')))
   assert.ok(outRange.errors.some((e) => e.includes('callbackDedupeTtlMs')))
   assert.ok(outRange.errors.some((e) => e.includes('maxRequestsPerMinute')))
+  assert.ok(outRange.errors.some((e) => e.includes('maxToolCallsPerStep')))
 })

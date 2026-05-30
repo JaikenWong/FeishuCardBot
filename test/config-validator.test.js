@@ -73,6 +73,7 @@ test('范围上限保护生效', () => {
       callbackDedupeTtlMs: 99999999,
       maxRequestsPerMinute: 999,
       maxToolArgsSize: 999999,
+      maxToolCallsPerStep: 999,
     },
   })
   assert.strictEqual(out.ok, false)
@@ -82,4 +83,5 @@ test('范围上限保护生效', () => {
   assert.ok(out.errors.some((e) => e.includes('callbackDedupeTtlMs')))
   assert.ok(out.errors.some((e) => e.includes('maxRequestsPerMinute')))
   assert.ok(out.errors.some((e) => e.includes('maxToolArgsSize')))
+  assert.ok(out.errors.some((e) => e.includes('maxToolCallsPerStep')))
 })

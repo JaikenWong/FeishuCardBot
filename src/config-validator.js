@@ -5,6 +5,7 @@ const LIMITS = {
   callbackDedupeTtlMs: { min: 1000, max: 3600000 },
   maxRequestsPerMinute: { min: 1, max: 120 },
   maxToolArgsSize: { min: 256, max: 32768 },
+  maxToolCallsPerStep: { min: 1, max: 20 },
 }
 
 function validateAgentRuntimeConfig({ schema, agentConfig }) {
@@ -35,6 +36,9 @@ function validateAgentRuntimeConfig({ schema, agentConfig }) {
   }
   if (agentConfig?.maxToolArgsSize != null && !(Number.isInteger(agentConfig.maxToolArgsSize) && agentConfig.maxToolArgsSize >= LIMITS.maxToolArgsSize.min && agentConfig.maxToolArgsSize <= LIMITS.maxToolArgsSize.max)) {
     errors.push(`agent.maxToolArgsSize 必须在 ${LIMITS.maxToolArgsSize.min}-${LIMITS.maxToolArgsSize.max} 之间`)
+  }
+  if (agentConfig?.maxToolCallsPerStep != null && !(Number.isInteger(agentConfig.maxToolCallsPerStep) && agentConfig.maxToolCallsPerStep >= LIMITS.maxToolCallsPerStep.min && agentConfig.maxToolCallsPerStep <= LIMITS.maxToolCallsPerStep.max)) {
+    errors.push(`agent.maxToolCallsPerStep 必须在 ${LIMITS.maxToolCallsPerStep.min}-${LIMITS.maxToolCallsPerStep.max} 之间`)
   }
 
   const requiredFields = (schema?.fields || []).filter((f) => f.required)

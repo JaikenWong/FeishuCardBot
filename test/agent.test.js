@@ -231,3 +231,44 @@ test('tool arguments 超限时触发 args_too_large 并降级', async () => {
   assert.ok(tooLarge)
   assert.strictEqual(tooLarge.payload.limit, 20)
 })
+
+test('tool_calls 超限时仅执行前 N 个并记录 truncated', async () => {
+  const events = []
+  const openai = fakeOpenAI([
+    {
+      choices: [{
+        message: {
+          content: null,
+          tool_calls: [
+            { id: 't1', function: { name: 'list_field_options', arguments: JSON.stringify({ field: 'project_number' }) } },
+            { id: 't2', function: { name: 'list_field_options', arguments: JSON.stringify({ field: 'project_number' }) } },
+            { id: 't3', function: { name: 'list_field_options', arguments: JSON.stringify({ field: 'project_number' }) } },
+          ],
+        },
+      }],
+    },
+  ])
+  const calls = []
+  const toolsSpy = {
+    getToolDefinitions: () => [],
+    executeTool: async (name) => {
+      calls.push(name)
+      return { result: [] }
+    },
+  }
+  const agent = createAgent({
+    openai,
+    plmClient: {},
+    config: { ...config, maxSteps: 1, maxToolCallsPerStep: 2 },
+    schema,
+    memoryDir: tmpDir(),
+    toolsMod: toolsSpy,
+    trace: (event, payload) => events.push({ event, payload }),
+  })
+  await agent.run('u1', 'x', { requestId: 'rid_z' })
+  assert.strictEqual(calls.length, 2)
+  const evt = events.find((e) => e.event === 'agent.tool_calls.truncated')
+  assert.ok(evt)
+  assert.strictEqual(evt.payload.originalCount, 3)
+  assert.strictEqual(evt.payload.allowedCount, 2)
+})
