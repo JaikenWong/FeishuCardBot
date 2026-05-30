@@ -42,6 +42,12 @@ function runHarnessCheck({ schema = formConfig.loadSchema(), config = agentConfi
   if (!schema.submit || schema.submit.action !== 'submit_create_part') {
     errors.push('submit.action 必须为 submit_create_part')
   }
+  if (typeof config.systemPrompt !== 'string' || config.systemPrompt.trim() === '') {
+    errors.push('systemPrompt 必须显式配置且为非空字符串')
+  }
+  if (typeof config.topicBoundary !== 'string' || config.topicBoundary.trim() === '') {
+    errors.push('topicBoundary 必须显式配置且为非空字符串')
+  }
   if (!Number.isInteger(maxToolArgsSize)) {
     errors.push('maxToolArgsSize 必须显式配置为整数')
   } else if (maxToolArgsSize < 256 || maxToolArgsSize > 32768) {

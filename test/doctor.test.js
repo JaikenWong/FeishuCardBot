@@ -22,6 +22,8 @@ test('runDoctor 全通过', () => {
   }
   const agentConfig = {
     allowedTools: ['list_field_options', 'prepare_create_part'],
+    systemPrompt: 'sys',
+    topicBoundary: '仅 PLM / 物料领域',
     maxSteps: 6,
     maxHistory: 20,
     openaiMaxRetries: 1,
