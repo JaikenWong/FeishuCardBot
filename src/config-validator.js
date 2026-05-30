@@ -1,3 +1,5 @@
+const { ENDPOINT_MAP } = require('./form-config')
+
 const LIMITS = {
   maxSteps: { min: 1, max: 12 },
   maxHistory: { min: 1, max: 100 },
@@ -100,8 +102,16 @@ function validateAgentRuntimeConfig({ schema, agentConfig }) {
 
   for (const f of schema?.fields || []) {
     if (!f.name) errors.push('form-schema 字段缺少 name')
-    if (!['input', 'select'].includes(f.type)) errors.push(`字段 ${f.name || '(unknown)'} type 非法`) 
+    if (!['input', 'select'].includes(f.type)) errors.push(`字段 ${f.name || '(unknown)'} type 非法`)
     if (f.type === 'select' && !f.optionSource) errors.push(`字段 ${f.name} 为 select 时必须配置 optionSource`)
+    if (f.type === 'select' && f.optionSource) {
+      const src = f.optionSource || {}
+      if (!['static', 'plm'].includes(src.type)) errors.push(`字段 ${f.name} optionSource.type 非法`)
+      if (src.type === 'plm' && !ENDPOINT_MAP[src.endpoint]) errors.push(`字段 ${f.name} optionSource.endpoint 非法`)
+      if (src.type === 'static' && (!Array.isArray(src.options) || src.options.length === 0)) {
+        errors.push(`字段 ${f.name} optionSource.options 不能为空`)
+      }
+    }
   }
 
   return { ok: errors.length === 0, errors }

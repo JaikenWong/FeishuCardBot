@@ -227,3 +227,45 @@ test('topicBoundary 为空时报错', () => {
   assert.strictEqual(out.ok, false)
   assert.ok(out.errors.some((e) => e.includes('topicBoundary 必须是非空字符串')))
 })
+
+test('select optionSource.type/endpoint 非法时报错', () => {
+  const schema = {
+    fields: [{ name: 'project_number', type: 'select', required: true, optionSource: { type: 'plm', endpoint: 'bad' } }],
+  }
+  const out = validateAgentRuntimeConfig({
+    schema,
+    agentConfig: {
+      allowedTools: ['list_field_options', 'prepare_create_part'],
+      maxSteps: 6,
+      maxHistory: 20,
+      openaiMaxRetries: 1,
+      callbackDedupeTtlMs: 300000,
+      maxRequestsPerMinute: 20,
+      maxToolArgsSize: 4096,
+      maxToolCallsPerStep: 5,
+    },
+  })
+  assert.strictEqual(out.ok, false)
+  assert.ok(out.errors.some((e) => e.includes('optionSource.endpoint 非法')))
+})
+
+test('select static options 为空时报错', () => {
+  const schema = {
+    fields: [{ name: 'project_number', type: 'select', required: true, optionSource: { type: 'static', options: [] } }],
+  }
+  const out = validateAgentRuntimeConfig({
+    schema,
+    agentConfig: {
+      allowedTools: ['list_field_options', 'prepare_create_part'],
+      maxSteps: 6,
+      maxHistory: 20,
+      openaiMaxRetries: 1,
+      callbackDedupeTtlMs: 300000,
+      maxRequestsPerMinute: 20,
+      maxToolArgsSize: 4096,
+      maxToolCallsPerStep: 5,
+    },
+  })
+  assert.strictEqual(out.ok, false)
+  assert.ok(out.errors.some((e) => e.includes('optionSource.options 不能为空')))
+})
