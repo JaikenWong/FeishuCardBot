@@ -5,6 +5,7 @@ const { ALL_TOOLS } = require('./tools')
 function runHarnessCheck({ schema = formConfig.loadSchema(), config = agentConfig } = {}) {
   const errors = []
   const allowedTools = Array.isArray(config.allowedTools) ? config.allowedTools : []
+  const maxToolArgsSize = config.maxToolArgsSize
 
   if (allowedTools.length === 0) {
     errors.push('allowedTools 不能为空')
@@ -29,6 +30,11 @@ function runHarnessCheck({ schema = formConfig.loadSchema(), config = agentConfi
 
   if (!schema.submit || schema.submit.action !== 'submit_create_part') {
     errors.push('submit.action 必须为 submit_create_part')
+  }
+  if (!Number.isInteger(maxToolArgsSize)) {
+    errors.push('maxToolArgsSize 必须显式配置为整数')
+  } else if (maxToolArgsSize < 256 || maxToolArgsSize > 32768) {
+    errors.push('maxToolArgsSize 必须在 256-32768 之间')
   }
 
   return { ok: errors.length === 0, errors }

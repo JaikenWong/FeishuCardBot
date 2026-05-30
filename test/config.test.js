@@ -16,6 +16,7 @@ test('agent.json 含 allowedTools 与限制', () => {
   assert.strictEqual(typeof cfg.maxSteps, 'number')
   assert.strictEqual(typeof cfg.maxHistory, 'number')
   assert.strictEqual(typeof cfg.openaiMaxRetries, 'number')
+  assert.strictEqual(typeof cfg.maxToolArgsSize, 'number')
   assert.strictEqual(typeof cfg.callbackDedupeTtlMs, 'number')
   assert.strictEqual(typeof cfg.maxRequestsPerMinute, 'number')
 })

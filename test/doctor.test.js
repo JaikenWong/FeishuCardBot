@@ -25,6 +25,7 @@ test('runDoctor 全通过', () => {
     maxSteps: 6,
     maxHistory: 20,
     openaiMaxRetries: 1,
+    maxToolArgsSize: 4096,
     callbackDedupeTtlMs: 300000,
   }
   const out = runDoctor({ env, agentConfig, schema })
