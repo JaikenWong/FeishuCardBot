@@ -105,6 +105,12 @@ function runHarnessCheck({ schema = formConfig.loadSchema(), config = agentConfi
     errors.push('schema 至少一个必填字段')
   }
 
+  const submitText = String(schema?.submit?.text || '').trim()
+  if (!submitText) {
+    errors.push('schema.submit.text 不能为空')
+  } else if (submitText.length > 30) {
+    errors.push('schema.submit.text 长度不能超过 30')
+  }
   if (!schema.submit || schema.submit.action !== 'submit_create_part') {
     errors.push('submit.action 必须为 submit_create_part')
   }
