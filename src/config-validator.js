@@ -80,8 +80,10 @@ function validateAgentRuntimeConfig({ schema, agentConfig }) {
     }
   }
   const requiredTools = ['list_field_options', 'prepare_create_part']
-  for (const t of requiredTools) {
-    if (!tools.includes(t)) errors.push(`agent.allowedTools 缺少: ${t}`)
+  if (Array.isArray(tools)) {
+    for (const t of requiredTools) {
+      if (!tools.includes(t)) errors.push(`agent.allowedTools 缺少: ${t}`)
+    }
   }
 
   if (!(Number.isInteger(cfg.maxSteps) && cfg.maxSteps >= LIMITS.maxSteps.min && cfg.maxSteps <= LIMITS.maxSteps.max)) {
