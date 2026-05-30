@@ -33,4 +33,30 @@ function assertReplay(results, fixture) {
   return { ok: errors.length === 0, errors }
 }
 
-module.exports = { loadReplayFixture, runReplay, assertReplay }
+function summarizeReplayResults(results = []) {
+  const summary = {
+    total: results.length,
+    cardAction: 0,
+    timeout: 0,
+    serviceUnavailable: 0,
+    otherReply: 0,
+    empty: 0,
+  }
+  for (const row of results) {
+    const out = row?.out || {}
+    if (out.cardAction) {
+      summary.cardAction += 1
+      continue
+    }
+    if (typeof out.reply === 'string') {
+      if (out.reply.includes('处理超时')) summary.timeout += 1
+      else if (out.reply.includes('服务暂不可用')) summary.serviceUnavailable += 1
+      else summary.otherReply += 1
+      continue
+    }
+    summary.empty += 1
+  }
+  return summary
+}
+
+module.exports = { loadReplayFixture, runReplay, assertReplay, summarizeReplayResults }

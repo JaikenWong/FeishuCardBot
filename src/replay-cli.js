@@ -2,7 +2,7 @@
 const path = require('path')
 const fs = require('fs')
 const { createAgent } = require('./agent')
-const { loadReplayFixture, runReplay, assertReplay } = require('./replay')
+const { loadReplayFixture, runReplay, assertReplay, summarizeReplayResults } = require('./replay')
 
 function fakeOpenAIForReplay(queue) {
   let i = 0
@@ -57,14 +57,14 @@ async function runFixture(fixturePath) {
     schema: { fields: [{ name: 'material_name', required: true }, { name: 'project_number', required: true }] },
   })
   const results = await runReplay({ fixture, agent })
-  return { fixture, check: assertReplay(results, fixture) }
+  return { fixture, check: assertReplay(results, fixture), summary: summarizeReplayResults(results) }
 }
 
 async function main() {
   const fixturePaths = getFixturePaths(process.argv)
   let hasFail = false
   for (const f of fixturePaths) {
-    const { fixture, check } = await runFixture(f)
+    const { fixture, check, summary } = await runFixture(f)
     if (!check.ok) {
       hasFail = true
       console.log(`[replay] FAIL ${fixture.name || path.basename(f)}`)
@@ -72,6 +72,7 @@ async function main() {
       continue
     }
     console.log(`[replay] OK ${fixture.name || path.basename(f)}`)
+    console.log(`[replay] summary total=${summary.total} card=${summary.cardAction} timeout=${summary.timeout} svc_down=${summary.serviceUnavailable} other=${summary.otherReply} empty=${summary.empty}`)
   }
   if (hasFail) process.exit(1)
 }

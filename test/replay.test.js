@@ -2,7 +2,7 @@ const { test } = require('node:test')
 const assert = require('node:assert')
 const path = require('path')
 const { createAgent } = require('../src/agent')
-const { loadReplayFixture, runReplay, assertReplay } = require('../src/replay')
+const { loadReplayFixture, runReplay, assertReplay, summarizeReplayResults } = require('../src/replay')
 
 function fakeOpenAI(responses) {
   let i = 0
@@ -241,4 +241,22 @@ test('replay tool-args-too-large fixture 命中超时降级', async () => {
   const results = await runReplay({ fixture, agent })
   const check = assertReplay(results, fixture)
   assert.strictEqual(check.ok, true)
+})
+
+test('summarizeReplayResults 分类统计', () => {
+  const summary = summarizeReplayResults([
+    { out: { cardAction: { type: 'confirm_create' } } },
+    { out: { reply: '处理超时，请简化你的请求后重试' } },
+    { out: { reply: '服务暂不可用，请稍后再试' } },
+    { out: { reply: '项目号可选 P1' } },
+    { out: {} },
+  ])
+  assert.deepStrictEqual(summary, {
+    total: 5,
+    cardAction: 1,
+    timeout: 1,
+    serviceUnavailable: 1,
+    otherReply: 1,
+    empty: 1,
+  })
 })
