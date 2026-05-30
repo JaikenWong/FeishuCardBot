@@ -51,6 +51,9 @@ function runHarnessCheck({ schema = formConfig.loadSchema(), config = agentConfi
     if (!['input', 'select'].includes(f.type)) {
       errors.push(`schema 字段 ${f.name} type 非法`)
     }
+    if (f.type === 'select' && !f.optionSource) {
+      errors.push(`schema 字段 ${f.name} 为 select 时必须配置 optionSource`)
+    }
   }
 
   const requiredFields = fields.filter((f) => f.required)

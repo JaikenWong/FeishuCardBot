@@ -318,3 +318,26 @@ test('harness-check 识别 schema 字段 type 非法', () => {
   assert.strictEqual(out.ok, false)
   assert.ok(out.errors.some((e) => e.includes('type 非法')))
 })
+
+test('harness-check 识别 select 缺 optionSource', () => {
+  const out = runHarnessCheck({
+    schema: {
+      submit: { action: 'submit_create_part' },
+      fields: [{ name: 'project_number', type: 'select', required: true }],
+    },
+    config: {
+      allowedTools: ['list_field_options', 'prepare_create_part'],
+      systemPrompt: 'sys',
+      topicBoundary: '仅 PLM / 物料领域',
+      maxSteps: 6,
+      maxHistory: 20,
+      maxToolArgsSize: 4096,
+      maxToolCallsPerStep: 5,
+      openaiMaxRetries: 1,
+      callbackDedupeTtlMs: 300000,
+      maxRequestsPerMinute: 20,
+    },
+  })
+  assert.strictEqual(out.ok, false)
+  assert.ok(out.errors.some((e) => e.includes('select 时必须配置 optionSource')))
+})
