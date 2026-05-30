@@ -410,3 +410,90 @@ test('harness-check 识别 select static options 为空', () => {
   assert.strictEqual(out.ok, false)
   assert.ok(out.errors.some((e) => e.includes('optionSource.options 不能为空')))
 })
+
+test('harness-check 识别 select static options text 非法', () => {
+  const out = runHarnessCheck({
+    schema: {
+      submit: { action: 'submit_create_part' },
+      fields: [{
+        name: 'project_number',
+        type: 'select',
+        required: true,
+        optionSource: { type: 'static', options: [{ text: '', value: 'p1' }] },
+      }],
+    },
+    config: {
+      allowedTools: ['list_field_options', 'prepare_create_part'],
+      systemPrompt: 'sys',
+      topicBoundary: '仅 PLM / 物料领域',
+      maxSteps: 6,
+      maxHistory: 20,
+      maxToolArgsSize: 4096,
+      maxToolCallsPerStep: 5,
+      openaiMaxRetries: 1,
+      callbackDedupeTtlMs: 300000,
+      maxRequestsPerMinute: 20,
+    },
+  })
+  assert.strictEqual(out.ok, false)
+  assert.ok(out.errors.some((e) => e.includes('optionSource.options.text 非法')))
+})
+
+test('harness-check 识别 select static options value 非法', () => {
+  const out = runHarnessCheck({
+    schema: {
+      submit: { action: 'submit_create_part' },
+      fields: [{
+        name: 'project_number',
+        type: 'select',
+        required: true,
+        optionSource: { type: 'static', options: [{ text: 'P1', value: '' }] },
+      }],
+    },
+    config: {
+      allowedTools: ['list_field_options', 'prepare_create_part'],
+      systemPrompt: 'sys',
+      topicBoundary: '仅 PLM / 物料领域',
+      maxSteps: 6,
+      maxHistory: 20,
+      maxToolArgsSize: 4096,
+      maxToolCallsPerStep: 5,
+      openaiMaxRetries: 1,
+      callbackDedupeTtlMs: 300000,
+      maxRequestsPerMinute: 20,
+    },
+  })
+  assert.strictEqual(out.ok, false)
+  assert.ok(out.errors.some((e) => e.includes('optionSource.options.value 非法')))
+})
+
+test('harness-check 识别 select static options value 重复', () => {
+  const out = runHarnessCheck({
+    schema: {
+      submit: { action: 'submit_create_part' },
+      fields: [{
+        name: 'project_number',
+        type: 'select',
+        required: true,
+        optionSource: {
+          type: 'static',
+          options: [{ text: 'P1', value: 'p1' }, { text: 'P-1', value: 'p1' }],
+        },
+      }],
+    },
+    config: {
+      allowedTools: ['list_field_options', 'prepare_create_part'],
+      systemPrompt: 'sys',
+      topicBoundary: '仅 PLM / 物料领域',
+      maxSteps: 6,
+      maxHistory: 20,
+      maxToolArgsSize: 4096,
+      maxToolCallsPerStep: 5,
+      openaiMaxRetries: 1,
+      callbackDedupeTtlMs: 300000,
+      maxRequestsPerMinute: 20,
+    },
+  })
+  assert.strictEqual(out.ok, false)
+  assert.ok(out.errors.some((e) => e.includes('optionSource.options.value 重复')))
+})
