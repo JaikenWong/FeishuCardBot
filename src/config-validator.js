@@ -1,4 +1,5 @@
 const { ENDPOINT_MAP } = require('./form-config')
+const { ALL_TOOLS } = require('./tools')
 
 const LIMITS = {
   maxSteps: { min: 1, max: 12 },
@@ -63,6 +64,10 @@ function validateAgentRuntimeConfig({ schema, agentConfig }) {
     const badTools = tools.filter((t) => typeof t !== 'string' || t.trim() === '')
     if (badTools.length > 0) {
       errors.push('agent.allowedTools 仅允许非空字符串')
+    }
+    const unknownTools = tools.filter((t) => !ALL_TOOLS[t])
+    if (unknownTools.length > 0) {
+      errors.push(`agent.allowedTools 含未知工具: ${unknownTools.join(', ')}`)
     }
     const dupTools = tools.filter((t, i) => tools.indexOf(t) !== i)
     if (dupTools.length > 0) {
