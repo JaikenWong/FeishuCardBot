@@ -4,6 +4,7 @@ const { loadSchema } = require('./form-config')
 const { validateAgentRuntimeConfig } = require('./config-validator')
 const { runHarnessCheck } = require('./harness-check')
 const { ENDPOINT_MAP } = require('./form-config')
+const { checkReplayFixtures } = require('./replay-fixture-check')
 
 const REQUIRED_ENV = ['FEISHU_APP_ID', 'FEISHU_APP_SECRET', 'OPENAI_BASE_URL', 'OPENAI_API_KEY', 'OPENAI_MODEL']
 
@@ -16,7 +17,7 @@ function loadAgentConfig(configPath) {
   return JSON.parse(fs.readFileSync(configPath, 'utf8'))
 }
 
-function runStrictChecks({ schema, config }) {
+function runStrictChecks({ schema, config, replayFixtureDir }) {
   const errors = []
   const fields = Array.isArray(schema?.fields) ? schema.fields : []
   const names = fields.map((f) => f?.name).filter(Boolean)
@@ -97,6 +98,10 @@ function runStrictChecks({ schema, config }) {
   } else if (submitText.length > 30) {
     errors.push('schema.submit.text 长度不能超过 30')
   }
+  const replayCheck = checkReplayFixtures({ fixtureDir: replayFixtureDir })
+  if (!replayCheck.ok) {
+    errors.push(...replayCheck.errors)
+  }
 
   return { ok: errors.length === 0, errors }
 }
@@ -109,6 +114,7 @@ function runDoctor({
   agentConfig,
   skipEnv = false,
   strict = false,
+  replayFixtureDir = path.join(__dirname, '..', 'test', 'fixtures'),
 } = {}) {
   const envCheck = skipEnv ? { ok: true, missing: [] } : checkEnv(env)
   let schema = inputSchema || null
@@ -134,7 +140,7 @@ function runDoctor({
   if (!cfg) cfg = {}
   const cfgCheck = schema ? validateAgentRuntimeConfig({ schema, agentConfig: cfg }) : { ok: false, errors: ['schema 加载失败'] }
   const harnessCheck = schema ? runHarnessCheck({ schema, config: cfg }) : { ok: false, errors: ['schema 加载失败'] }
-  const strictCheck = strict && schema ? runStrictChecks({ schema, config: cfg }) : { ok: true, errors: [] }
+  const strictCheck = strict && schema ? runStrictChecks({ schema, config: cfg, replayFixtureDir }) : { ok: true, errors: [] }
 
   const ok = envCheck.ok && !schemaError && !configError && cfgCheck.ok && harnessCheck.ok && strictCheck.ok
   return {

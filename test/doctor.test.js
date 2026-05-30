@@ -120,6 +120,39 @@ test('runDoctor strict 开启时执行严格校验', () => {
   assert.strictEqual(out.strictCheck.ok, false)
 })
 
+test('runDoctor strict: replay fixture 非法时失败', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'doctor-replay-fixtures-'))
+  fs.writeFileSync(path.join(dir, 'replay-bad.json'), JSON.stringify({
+    name: '',
+    turns: [{ user: 'u1', expect: { type: 'reply' } }],
+  }), 'utf8')
+  const schema = {
+    submit: { action: 'submit_create_part', text: '确定创建' },
+    fields: [{ name: 'material_name', type: 'input', required: true, label: '物料名', placeholder: '请输入物料名' }],
+  }
+  const out = runDoctor({
+    env: { FEISHU_APP_ID: 'x', FEISHU_APP_SECRET: 'x', OPENAI_BASE_URL: 'x', OPENAI_API_KEY: 'x', OPENAI_MODEL: 'x' },
+    strict: true,
+    schema,
+    replayFixtureDir: dir,
+    agentConfig: {
+      allowedTools: ['list_field_options', 'prepare_create_part'],
+      maxSteps: 6,
+      maxHistory: 20,
+      openaiMaxRetries: 1,
+      maxToolArgsSize: 4096,
+      maxToolCallsPerStep: 5,
+      callbackDedupeTtlMs: 300000,
+      maxRequestsPerMinute: 20,
+      systemPrompt: 'ok',
+      model: '',
+    },
+  })
+  assert.strictEqual(out.ok, false)
+  assert.strictEqual(out.strictCheck.ok, false)
+  assert.ok(out.strictCheck.errors.some((e) => e.includes('invalid replay fixture')))
+})
+
 test('runStrictChecks: submit 文案空或过长失败', () => {
   const baseConfig = { model: '', systemPrompt: 'ok' }
   const r1 = runStrictChecks({
