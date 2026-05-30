@@ -43,6 +43,16 @@ function validateAgentRuntimeConfig({ schema, agentConfig }) {
       errors.push(`agent.${k} 必须显式配置`)
     }
   }
+  if (Object.prototype.hasOwnProperty.call(cfg, 'systemPrompt')) {
+    if (typeof cfg.systemPrompt !== 'string' || cfg.systemPrompt.trim() === '') {
+      errors.push('agent.systemPrompt 必须是非空字符串')
+    }
+  }
+  if (Object.prototype.hasOwnProperty.call(cfg, 'topicBoundary')) {
+    if (typeof cfg.topicBoundary !== 'string' || cfg.topicBoundary.trim() === '') {
+      errors.push('agent.topicBoundary 必须是非空字符串')
+    }
+  }
 
   const tools = cfg.allowedTools || []
   if (!Array.isArray(tools)) {
