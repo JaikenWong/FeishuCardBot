@@ -52,6 +52,12 @@ function runHarnessCheck({ schema = formConfig.loadSchema(), config = agentConfi
   if (!Number.isInteger(config.maxToolCallsPerStep) || config.maxToolCallsPerStep < 1 || config.maxToolCallsPerStep > 20) {
     errors.push('maxToolCallsPerStep 必须显式配置且在 1-20 之间')
   }
+  if (!Number.isInteger(config.maxSteps) || config.maxSteps < 1 || config.maxSteps > 12) {
+    errors.push('maxSteps 必须显式配置且在 1-12 之间')
+  }
+  if (!Number.isInteger(config.maxHistory) || config.maxHistory < 1 || config.maxHistory > 100) {
+    errors.push('maxHistory 必须显式配置且在 1-100 之间')
+  }
 
   return { ok: errors.length === 0, errors }
 }
