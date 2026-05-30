@@ -269,3 +269,56 @@ test('select static options 为空时报错', () => {
   assert.strictEqual(out.ok, false)
   assert.ok(out.errors.some((e) => e.includes('optionSource.options 不能为空')))
 })
+
+test('select static options text/value 非法时报错', () => {
+  const schema = {
+    fields: [{
+      name: 'project_number',
+      type: 'select',
+      required: true,
+      optionSource: { type: 'static', options: [{ text: '', value: '' }] },
+    }],
+  }
+  const out = validateAgentRuntimeConfig({
+    schema,
+    agentConfig: {
+      allowedTools: ['list_field_options', 'prepare_create_part'],
+      maxSteps: 6,
+      maxHistory: 20,
+      openaiMaxRetries: 1,
+      callbackDedupeTtlMs: 300000,
+      maxRequestsPerMinute: 20,
+      maxToolArgsSize: 4096,
+      maxToolCallsPerStep: 5,
+    },
+  })
+  assert.strictEqual(out.ok, false)
+  assert.ok(out.errors.some((e) => e.includes('optionSource.options.text 非法')))
+  assert.ok(out.errors.some((e) => e.includes('optionSource.options.value 非法')))
+})
+
+test('select static options value 重复时报错', () => {
+  const schema = {
+    fields: [{
+      name: 'project_number',
+      type: 'select',
+      required: true,
+      optionSource: { type: 'static', options: [{ text: 'P1', value: 'p1' }, { text: 'P-1', value: 'p1' }] },
+    }],
+  }
+  const out = validateAgentRuntimeConfig({
+    schema,
+    agentConfig: {
+      allowedTools: ['list_field_options', 'prepare_create_part'],
+      maxSteps: 6,
+      maxHistory: 20,
+      openaiMaxRetries: 1,
+      callbackDedupeTtlMs: 300000,
+      maxRequestsPerMinute: 20,
+      maxToolArgsSize: 4096,
+      maxToolCallsPerStep: 5,
+    },
+  })
+  assert.strictEqual(out.ok, false)
+  assert.ok(out.errors.some((e) => e.includes('optionSource.options.value 重复')))
+})

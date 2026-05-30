@@ -111,6 +111,21 @@ function validateAgentRuntimeConfig({ schema, agentConfig }) {
       if (src.type === 'static' && (!Array.isArray(src.options) || src.options.length === 0)) {
         errors.push(`字段 ${f.name} optionSource.options 不能为空`)
       }
+      if (src.type === 'static' && Array.isArray(src.options) && src.options.length > 0) {
+        const badTextOptions = src.options.filter((opt) => {
+          const text = String(opt?.text ?? '').trim()
+          return !text || text.length > 30
+        })
+        if (badTextOptions.length > 0) errors.push(`字段 ${f.name} optionSource.options.text 非法`)
+        const badValueOptions = src.options.filter((opt) => {
+          const value = String(opt?.value ?? '').trim()
+          return !value || value.length > 60
+        })
+        if (badValueOptions.length > 0) errors.push(`字段 ${f.name} optionSource.options.value 非法`)
+        const values = src.options.map((opt) => String(opt?.value ?? '')).filter(Boolean)
+        const dupValues = values.filter((v, i) => values.indexOf(v) !== i)
+        if (dupValues.length > 0) errors.push(`字段 ${f.name} optionSource.options.value 重复: ${Array.from(new Set(dupValues)).join(', ')}`)
+      }
     }
   }
 
