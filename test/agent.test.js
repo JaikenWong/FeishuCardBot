@@ -272,3 +272,25 @@ test('tool_calls 超限时仅执行前 N 个并记录 truncated', async () => {
   assert.strictEqual(evt.payload.originalCount, 3)
   assert.strictEqual(evt.payload.allowedCount, 2)
 })
+
+test('tool 返回 result.error 时记录 result_error trace', async () => {
+  const events = []
+  const openai = fakeOpenAI([
+    { choices: [{ message: { content: null, tool_calls: [
+      { id: 't1', function: { name: 'prepare_create_part', arguments: JSON.stringify({ values: { material_name: '板' } }) } },
+    ] } }] },
+  ])
+  const agent = createAgent({
+    openai,
+    plmClient: {},
+    config: { ...config, maxSteps: 1 },
+    schema,
+    memoryDir: tmpDir(),
+    trace: (event, payload) => events.push({ event, payload }),
+  })
+  await agent.run('u1', 'x', { requestId: 'rid_err' })
+  const evt = events.find((e) => e.event === 'agent.tool.result_error')
+  assert.ok(evt)
+  assert.strictEqual(evt.payload.name, 'prepare_create_part')
+  assert.ok(evt.payload.error.includes('缺少必填字段'))
+})

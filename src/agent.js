@@ -109,6 +109,15 @@ function createAgent({ openai, plmClient, config, schema, memoryDir, memoryMod =
           messages.push({ role: 'tool', tool_call_id: tc.id, content: '已弹出确认卡片' })
           break
         } else {
+          if (out?.result?.error) {
+            tracer.emit('agent.tool.result_error', {
+              step,
+              name: tc.function.name,
+              error: String(out.result.error),
+              toolArgsSize: String(rawArgs).length,
+              requestId,
+            })
+          }
           tracer.emit('agent.tool.result', { step, name: tc.function.name, requestId })
           messages.push({ role: 'tool', tool_call_id: tc.id, content: JSON.stringify(out.result) })
         }
