@@ -124,6 +124,9 @@ function validateAgentRuntimeConfig({ schema, agentConfig }) {
   } else if (submitText.length > 30) {
     errors.push('schema.submit.text 长度不能超过 30')
   }
+  if (schema?.submit?.action !== 'submit_create_part') {
+    errors.push('schema.submit.action 必须为 submit_create_part')
+  }
 
   for (const f of schema?.fields || []) {
     if (!f.name) errors.push('form-schema 字段缺少 name')

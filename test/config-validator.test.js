@@ -4,6 +4,7 @@ const { validateAgentRuntimeConfig, assertValidAgentRuntimeConfig } = require('.
 
 test('有效配置通过', () => {
   const schema = { submit: { text: '✅ 确定创建' }, fields: [{ name: 'material_name', type: 'input', required: true }] }
+  schema.submit.action = 'submit_create_part'
   const agentConfig = {
     allowedTools: ['list_field_options', 'prepare_create_part'],
     systemPrompt: 'sys',
@@ -72,6 +73,48 @@ test('submit.text 过长时报错', () => {
   })
   assert.strictEqual(out.ok, false)
   assert.ok(out.errors.some((e) => e.includes('schema.submit.text 长度不能超过 30')))
+})
+
+test('submit.action 缺失时报错', () => {
+  const schema = { submit: { text: '✅ 确定创建' }, fields: [{ name: 'material_name', type: 'input', required: true }] }
+  const out = validateAgentRuntimeConfig({
+    schema,
+    agentConfig: {
+      allowedTools: ['list_field_options', 'prepare_create_part'],
+      systemPrompt: 'sys',
+      topicBoundary: '仅 PLM / 物料领域',
+      maxSteps: 6,
+      maxHistory: 20,
+      openaiMaxRetries: 1,
+      callbackDedupeTtlMs: 300000,
+      maxRequestsPerMinute: 20,
+      maxToolArgsSize: 4096,
+      maxToolCallsPerStep: 5,
+    },
+  })
+  assert.strictEqual(out.ok, false)
+  assert.ok(out.errors.some((e) => e.includes('schema.submit.action 必须为 submit_create_part')))
+})
+
+test('submit.action 非法时报错', () => {
+  const schema = { submit: { text: '✅ 确定创建', action: 'bad_action' }, fields: [{ name: 'material_name', type: 'input', required: true }] }
+  const out = validateAgentRuntimeConfig({
+    schema,
+    agentConfig: {
+      allowedTools: ['list_field_options', 'prepare_create_part'],
+      systemPrompt: 'sys',
+      topicBoundary: '仅 PLM / 物料领域',
+      maxSteps: 6,
+      maxHistory: 20,
+      openaiMaxRetries: 1,
+      callbackDedupeTtlMs: 300000,
+      maxRequestsPerMinute: 20,
+      maxToolArgsSize: 4096,
+      maxToolCallsPerStep: 5,
+    },
+  })
+  assert.strictEqual(out.ok, false)
+  assert.ok(out.errors.some((e) => e.includes('schema.submit.action 必须为 submit_create_part')))
 })
 
 test('openaiMaxRetries 非法时报错', () => {
