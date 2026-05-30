@@ -20,6 +20,9 @@ function validateReplayFixture(fixture, filePath = '') {
   if (typeof fixture.name !== 'string' || fixture.name.trim() === '') {
     throw new Error(`invalid replay fixture${where}: name must be non-empty string`)
   }
+  if (!/^[a-z0-9][a-z0-9-]*-flow$/.test(fixture.name.trim())) {
+    throw new Error(`invalid replay fixture${where}: name must match *-flow`)
+  }
   if (!Array.isArray(fixture.turns) || fixture.turns.length === 0) {
     throw new Error(`invalid replay fixture${where}: turns must be non-empty array`)
   }

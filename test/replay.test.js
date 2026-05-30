@@ -267,75 +267,79 @@ test('validateReplayFixture 对坏结构 fail-fast', () => {
     /name must be non-empty string/
   )
   assert.throws(
-    () => validateReplayFixture({ name: 'x', turns: [{ user: 'u1', expect: { type: 'reply', contains: 'ok' } }], typo: true }),
+    () => validateReplayFixture({ name: 'x', turns: [{ user: 'u1', expect: { type: 'reply', contains: 'ok' } }] }),
+    /name must match \*-flow/
+  )
+  assert.throws(
+    () => validateReplayFixture({ name: 'x-flow', turns: [{ user: 'u1', expect: { type: 'reply', contains: 'ok' } }], typo: true }),
     /unknown top-level keys: typo/
   )
   assert.throws(
-    () => validateReplayFixture({ name: 'x', turns: [] }),
+    () => validateReplayFixture({ name: 'x-flow', turns: [] }),
     /turns must be non-empty array/
   )
   assert.throws(
-    () => validateReplayFixture({ name: 'x', turns: [{ user: '', expect: { type: 'reply' } }] }),
+    () => validateReplayFixture({ name: 'x-flow', turns: [{ user: '', expect: { type: 'reply' } }] }),
     /turns\[0\]\.user must be non-empty string/
   )
   assert.throws(
-    () => validateReplayFixture({ name: 'x', turns: [{ user: 'u1' }] }),
+    () => validateReplayFixture({ name: 'x-flow', turns: [{ user: 'u1' }] }),
     /turns\[0\]\.expect must be object/
   )
   assert.throws(
-    () => validateReplayFixture({ name: 'x', turns: [{ user: 'u1', expect: { type: 'x' } }] }),
+    () => validateReplayFixture({ name: 'x-flow', turns: [{ user: 'u1', expect: { type: 'x' } }] }),
     /expect\.type must be reply\|cardAction/
   )
   assert.throws(
-    () => validateReplayFixture({ name: 'x', turns: [{ user: 'u1', expect: { type: 'reply', typo: 'x' } }] }),
+    () => validateReplayFixture({ name: 'x-flow', turns: [{ user: 'u1', expect: { type: 'reply', typo: 'x' } }] }),
     /expect has unknown keys/
   )
   assert.throws(
-    () => validateReplayFixture({ name: 'x', turns: [{ user: 'u1', expect: { type: 'reply', actionType: 'confirm_create' } }] }),
+    () => validateReplayFixture({ name: 'x-flow', turns: [{ user: 'u1', expect: { type: 'reply', actionType: 'confirm_create' } }] }),
     /actionType only allowed for cardAction/
   )
   assert.throws(
-    () => validateReplayFixture({ name: 'x', turns: [{ user: 'u1', expect: { type: 'reply', notCardAction: false } }] }),
+    () => validateReplayFixture({ name: 'x-flow', turns: [{ user: 'u1', expect: { type: 'reply', notCardAction: false } }] }),
     /expect\.notCardAction must be true/
   )
   assert.throws(
-    () => validateReplayFixture({ name: 'x', turns: [{ user: 'u1', expect: { type: 'reply' } }] }),
+    () => validateReplayFixture({ name: 'x-flow', turns: [{ user: 'u1', expect: { type: 'reply' } }] }),
     /expect\.contains required for reply assertions/
   )
   assert.throws(
-    () => validateReplayFixture({ name: 'x', turns: [{ user: 'u1', expect: { type: 'cardAction' } }] }),
+    () => validateReplayFixture({ name: 'x-flow', turns: [{ user: 'u1', expect: { type: 'cardAction' } }] }),
     /expect\.actionType required for cardAction assertions/
   )
   assert.throws(
-    () => validateReplayFixture({ name: 'x', turns: [{ user: 'u1', expect: { type: 'cardAction', actionType: 'confirm_create', contains: 'x' } }] }),
+    () => validateReplayFixture({ name: 'x-flow', turns: [{ user: 'u1', expect: { type: 'cardAction', actionType: 'confirm_create', contains: 'x' } }] }),
     /expect\.contains only allowed for reply/
   )
   assert.throws(
-    () => validateReplayFixture({ name: 'x', turns: [{ user: 'u1', expect: { type: 'cardAction', actionType: 'confirm_create', notCardAction: true } }] }),
+    () => validateReplayFixture({ name: 'x-flow', turns: [{ user: 'u1', expect: { type: 'cardAction', actionType: 'confirm_create', notCardAction: true } }] }),
     /expect\.notCardAction only allowed for reply/
   )
   assert.throws(
-    () => validateReplayFixture({ name: 'x', maxSteps: 0, turns: [{ user: 'u1', expect: { type: 'reply', contains: 'x' } }] }),
+    () => validateReplayFixture({ name: 'x-flow', maxSteps: 0, turns: [{ user: 'u1', expect: { type: 'reply', contains: 'x' } }] }),
     /maxSteps must be integer in 1-12/
   )
   assert.throws(
-    () => validateReplayFixture({ name: 'x', openaiMaxRetries: 9, turns: [{ user: 'u1', expect: { type: 'reply', contains: 'x' } }] }),
+    () => validateReplayFixture({ name: 'x-flow', openaiMaxRetries: 9, turns: [{ user: 'u1', expect: { type: 'reply', contains: 'x' } }] }),
     /openaiMaxRetries must be integer in 0-5/
   )
   assert.throws(
-    () => validateReplayFixture({ name: 'x', maxToolArgsSize: 0, turns: [{ user: 'u1', expect: { type: 'reply', contains: 'x' } }] }),
+    () => validateReplayFixture({ name: 'x-flow', maxToolArgsSize: 0, turns: [{ user: 'u1', expect: { type: 'reply', contains: 'x' } }] }),
     /maxToolArgsSize must be integer in 1-32768/
   )
   assert.throws(
-    () => validateReplayFixture({ name: 'x', mockResponses: [], turns: [{ user: 'u1', expect: { type: 'reply', contains: 'x' } }] }),
+    () => validateReplayFixture({ name: 'x-flow', mockResponses: [], turns: [{ user: 'u1', expect: { type: 'reply', contains: 'x' } }] }),
     /mockResponses must be non-empty array/
   )
   assert.throws(
-    () => validateReplayFixture({ name: 'x', mockResponses: [1], turns: [{ user: 'u1', expect: { type: 'reply', contains: 'x' } }] }),
+    () => validateReplayFixture({ name: 'x-flow', mockResponses: [1], turns: [{ user: 'u1', expect: { type: 'reply', contains: 'x' } }] }),
     /mockResponses\[0\] must be object/
   )
   assert.throws(
-    () => validateReplayFixture({ name: 'x', mockResponses: [{ __throw: true, message: ' ' }], turns: [{ user: 'u1', expect: { type: 'reply', contains: 'x' } }] }),
+    () => validateReplayFixture({ name: 'x-flow', mockResponses: [{ __throw: true, message: ' ' }], turns: [{ user: 'u1', expect: { type: 'reply', contains: 'x' } }] }),
     /message must be non-empty string when __throw=true/
   )
 })
