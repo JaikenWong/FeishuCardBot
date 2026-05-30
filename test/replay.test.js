@@ -267,6 +267,10 @@ test('validateReplayFixture 对坏结构 fail-fast', () => {
     /name must be non-empty string/
   )
   assert.throws(
+    () => validateReplayFixture({ name: 'x', turns: [{ user: 'u1', expect: { type: 'reply', contains: 'ok' } }], typo: true }),
+    /unknown top-level keys: typo/
+  )
+  assert.throws(
     () => validateReplayFixture({ name: 'x', turns: [] }),
     /turns must be non-empty array/
   )
@@ -305,6 +309,10 @@ test('validateReplayFixture 对坏结构 fail-fast', () => {
   assert.throws(
     () => validateReplayFixture({ name: 'x', turns: [{ user: 'u1', expect: { type: 'cardAction', actionType: 'confirm_create', contains: 'x' } }] }),
     /expect\.contains only allowed for reply/
+  )
+  assert.throws(
+    () => validateReplayFixture({ name: 'x', turns: [{ user: 'u1', expect: { type: 'cardAction', actionType: 'confirm_create', notCardAction: true } }] }),
+    /expect\.notCardAction only allowed for reply/
   )
   assert.throws(
     () => validateReplayFixture({ name: 'x', maxSteps: 0, turns: [{ user: 'u1', expect: { type: 'reply', contains: 'x' } }] }),

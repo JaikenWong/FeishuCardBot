@@ -2,6 +2,7 @@ const fs = require('fs')
 
 function validateReplayFixture(fixture, filePath = '') {
   const where = filePath ? ` in ${filePath}` : ''
+  const allowedTopKeys = new Set(['name', 'turns', 'mockResponses', 'maxSteps', 'openaiMaxRetries', 'maxToolArgsSize'])
   const allowedExpectKeys = new Set(['type', 'contains', 'actionType', 'notCardAction'])
   const assertIntInRange = (key, min, max) => {
     if (fixture[key] == null) return
@@ -11,6 +12,10 @@ function validateReplayFixture(fixture, filePath = '') {
   }
   if (!fixture || typeof fixture !== 'object' || Array.isArray(fixture)) {
     throw new Error(`invalid replay fixture${where}: root must be object`)
+  }
+  const unknownTopKeys = Object.keys(fixture).filter((k) => !allowedTopKeys.has(k))
+  if (unknownTopKeys.length > 0) {
+    throw new Error(`invalid replay fixture${where}: unknown top-level keys: ${unknownTopKeys.join(',')}`)
   }
   if (typeof fixture.name !== 'string' || fixture.name.trim() === '') {
     throw new Error(`invalid replay fixture${where}: name must be non-empty string`)
@@ -78,6 +83,9 @@ function validateReplayFixture(fixture, filePath = '') {
     }
     if (expect.type === 'cardAction' && Object.prototype.hasOwnProperty.call(expect, 'contains')) {
       throw new Error(`invalid replay fixture${where}: turns[${idx}].expect.contains only allowed for reply`)
+    }
+    if (expect.type === 'cardAction' && Object.prototype.hasOwnProperty.call(expect, 'notCardAction')) {
+      throw new Error(`invalid replay fixture${where}: turns[${idx}].expect.notCardAction only allowed for reply`)
     }
   })
 }
