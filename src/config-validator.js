@@ -63,6 +63,9 @@ function validateAgentRuntimeConfig({ schema, agentConfig }) {
   if (!Array.isArray(tools)) {
     errors.push('agent.allowedTools 必须是数组')
   } else {
+    if (tools.length === 0) {
+      errors.push('agent.allowedTools 不能为空')
+    }
     const badTools = tools.filter((t) => typeof t !== 'string' || t.trim() === '')
     if (badTools.length > 0) {
       errors.push('agent.allowedTools 仅允许非空字符串')
