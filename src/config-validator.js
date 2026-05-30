@@ -1,5 +1,7 @@
 const { ENDPOINT_MAP } = require('./form-config')
 const { ALL_TOOLS } = require('./tools')
+const FIELD_NAME_RE = /^[a-z][a-z0-9_]*$/
+const MAX_FIELD_NAME_LEN = 40
 
 const LIMITS = {
   maxSteps: { min: 1, max: 12 },
@@ -110,6 +112,9 @@ function validateAgentRuntimeConfig({ schema, agentConfig }) {
 
   for (const f of schema?.fields || []) {
     if (!f.name) errors.push('form-schema 字段缺少 name')
+    if (f?.name && (typeof f.name !== 'string' || !FIELD_NAME_RE.test(f.name) || f.name.length > MAX_FIELD_NAME_LEN)) {
+      errors.push(`字段 ${f.name} name 格式非法`)
+    }
     if (!['input', 'select'].includes(f.type)) errors.push(`字段 ${f.name || '(unknown)'} type 非法`)
     if (f.type === 'select' && !f.optionSource) errors.push(`字段 ${f.name} 为 select 时必须配置 optionSource`)
     if (f.type === 'select' && f.optionSource) {

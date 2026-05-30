@@ -365,3 +365,26 @@ test('schema 字段名重复时报错', () => {
   assert.strictEqual(out.ok, false)
   assert.ok(out.errors.some((e) => e.includes('字段名重复')))
 })
+
+test('schema 字段名格式非法时报错', () => {
+  const schema = {
+    fields: [
+      { name: 'Bad-Name', type: 'input', required: true },
+    ],
+  }
+  const out = validateAgentRuntimeConfig({
+    schema,
+    agentConfig: {
+      allowedTools: ['list_field_options', 'prepare_create_part'],
+      maxSteps: 6,
+      maxHistory: 20,
+      openaiMaxRetries: 1,
+      callbackDedupeTtlMs: 300000,
+      maxRequestsPerMinute: 20,
+      maxToolArgsSize: 4096,
+      maxToolCallsPerStep: 5,
+    },
+  })
+  assert.strictEqual(out.ok, false)
+  assert.ok(out.errors.some((e) => e.includes('name 格式非法')))
+})
