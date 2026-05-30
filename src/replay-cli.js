@@ -63,8 +63,15 @@ async function runFixture(fixturePath) {
 async function main() {
   const fixturePaths = getFixturePaths(process.argv)
   let hasFail = false
+  const aggregate = { total: 0, cardAction: 0, timeout: 0, serviceUnavailable: 0, otherReply: 0, empty: 0 }
   for (const f of fixturePaths) {
     const { fixture, check, summary } = await runFixture(f)
+    aggregate.total += summary.total
+    aggregate.cardAction += summary.cardAction
+    aggregate.timeout += summary.timeout
+    aggregate.serviceUnavailable += summary.serviceUnavailable
+    aggregate.otherReply += summary.otherReply
+    aggregate.empty += summary.empty
     if (!check.ok) {
       hasFail = true
       console.log(`[replay] FAIL ${fixture.name || path.basename(f)}`)
@@ -74,6 +81,7 @@ async function main() {
     console.log(`[replay] OK ${fixture.name || path.basename(f)}`)
     console.log(`[replay] summary total=${summary.total} card=${summary.cardAction} timeout=${summary.timeout} svc_down=${summary.serviceUnavailable} other=${summary.otherReply} empty=${summary.empty}`)
   }
+  console.log(`[replay] aggregate total=${aggregate.total} card=${aggregate.cardAction} timeout=${aggregate.timeout} svc_down=${aggregate.serviceUnavailable} other=${aggregate.otherReply} empty=${aggregate.empty}`)
   if (hasFail) process.exit(1)
 }
 
