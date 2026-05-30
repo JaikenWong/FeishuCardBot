@@ -42,6 +42,16 @@ test('prepare_create_part 字段齐返回 confirm_create 卡片动作', async ()
   assert.deepStrictEqual(out.cardAction, { type: 'confirm_create', values })
 })
 
+test('prepare_create_part 标量值自动规范化', async () => {
+  const out = await executeTool('prepare_create_part', {
+    values: { material_name: ' 123 ', project_number: 1001, note: false },
+  }, { schema, client: {} })
+  assert.deepStrictEqual(out.cardAction, {
+    type: 'confirm_create',
+    values: { material_name: '123', project_number: '1001', note: 'false' },
+  })
+})
+
 test('prepare_create_part values 非对象返回 error', async () => {
   const out = await executeTool('prepare_create_part', { values: [] }, { schema, client: {} })
   assert.ok(out.result.error.includes('必须是对象'))
@@ -57,6 +67,13 @@ test('prepare_create_part 字段值过长返回 error', async () => {
     values: { material_name: 'x'.repeat(201), project_number: 'p1' },
   }, { schema, client: {} })
   assert.ok(out.result.error.includes('值过长'))
+})
+
+test('prepare_create_part 字段值类型非法返回 error', async () => {
+  const out = await executeTool('prepare_create_part', {
+    values: { material_name: { x: 1 }, project_number: 'p1' },
+  }, { schema, client: {} })
+  assert.ok(out.result.error.includes('值类型非法'))
 })
 
 test('白名单外 tool name 抛错', async () => {

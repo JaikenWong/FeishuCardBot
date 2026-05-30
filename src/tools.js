@@ -47,6 +47,13 @@ function normalizeString(v) {
   return typeof v === 'string' ? v.trim() : v
 }
 
+function normalizeFieldValue(v) {
+  if (v == null) return null
+  if (typeof v === 'string') return v.trim()
+  if (typeof v === 'number' || typeof v === 'boolean') return String(v)
+  return undefined
+}
+
 async function executeTool(name, args, deps) {
   const { schema, client } = deps
   if (name === 'list_field_options') {
@@ -70,7 +77,10 @@ async function executeTool(name, args, deps) {
     const values = {}
     for (const [k, v] of Object.entries(args.values)) {
       if (!allowedFields.has(k)) return { result: { error: `未知字段: ${k}` } }
-      const val = normalizeString(v)
+      const val = normalizeFieldValue(v)
+      if (val === undefined) {
+        return { result: { error: `字段 ${k} 值类型非法` } }
+      }
       if (typeof val === 'string' && val.length > MAX_VALUE_LEN) {
         return { result: { error: `字段 ${k} 值过长` } }
       }
