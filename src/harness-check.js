@@ -106,6 +106,9 @@ function runHarnessCheck({ schema = formConfig.loadSchema(), config = agentConfi
   }
 
   const submitText = String(schema?.submit?.text || '').trim()
+  if (!schema?.submit || typeof schema.submit !== 'object' || Array.isArray(schema.submit)) {
+    errors.push('schema.submit 必须是对象')
+  }
   if (!submitText) {
     errors.push('schema.submit.text 不能为空')
   } else if (submitText.length > 30) {
