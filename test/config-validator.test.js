@@ -176,6 +176,13 @@ test('未知配置字段时报错', () => {
   assert.ok(out.errors.some((e) => e.includes('未知字段')))
 })
 
+test('agentConfig 数组时报错', () => {
+  const schema = { submit: { text: '✅ 确定创建' }, fields: [{ name: 'material_name', type: 'input', required: true }] }
+  const out = validateAgentRuntimeConfig({ schema, agentConfig: [] })
+  assert.strictEqual(out.ok, false)
+  assert.ok(out.errors.some((e) => e.includes('agent 配置必须是对象')))
+})
+
 test('护栏字段缺失时报显式配置错误', () => {
   const schema = { fields: [{ name: 'material_name', type: 'input', required: true }] }
   const out = validateAgentRuntimeConfig({

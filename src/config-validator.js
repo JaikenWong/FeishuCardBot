@@ -38,7 +38,10 @@ const REQUIRED_GUARD_KEYS = [
 function validateAgentRuntimeConfig({ schema, agentConfig }) {
   const errors = []
   if (!schema || !Array.isArray(schema.fields)) errors.push('form-schema.fields 必须是数组')
-  const cfg = agentConfig && typeof agentConfig === 'object' ? agentConfig : {}
+  const cfg = agentConfig && typeof agentConfig === 'object' && !Array.isArray(agentConfig) ? agentConfig : {}
+  if (agentConfig != null && (typeof agentConfig !== 'object' || Array.isArray(agentConfig))) {
+    errors.push('agent 配置必须是对象')
+  }
   const unknownKeys = Object.keys(cfg).filter((k) => !ALLOWED_AGENT_CONFIG_KEYS.has(k))
   if (unknownKeys.length > 0) {
     errors.push(`agent 配置含未知字段: ${unknownKeys.join(', ')}`)
