@@ -4,6 +4,7 @@ const { ALL_TOOLS } = require('./tools')
 
 function runHarnessCheck({ schema = formConfig.loadSchema(), config = agentConfig } = {}) {
   const errors = []
+  const fields = Array.isArray(schema?.fields) ? schema.fields : []
   const allowedTools = Array.isArray(config.allowedTools) ? config.allowedTools : []
   const maxToolArgsSize = config.maxToolArgsSize
 
@@ -34,7 +35,25 @@ function runHarnessCheck({ schema = formConfig.loadSchema(), config = agentConfi
     errors.push(`allowedTools 含重复工具: ${Array.from(new Set(dupTools)).join(', ')}`)
   }
 
-  const requiredFields = (schema.fields || []).filter((f) => f.required)
+  if (!Array.isArray(schema?.fields)) {
+    errors.push('schema.fields 必须是数组')
+  }
+  const names = fields.map((f) => f?.name).filter(Boolean)
+  const dupNames = names.filter((x, i) => names.indexOf(x) !== i)
+  if (dupNames.length > 0) {
+    errors.push(`schema 字段名重复: ${Array.from(new Set(dupNames)).join(', ')}`)
+  }
+  for (const f of fields) {
+    if (!f?.name || typeof f.name !== 'string' || f.name.trim() === '') {
+      errors.push('schema 字段 name 不能为空')
+      continue
+    }
+    if (!['input', 'select'].includes(f.type)) {
+      errors.push(`schema 字段 ${f.name} type 非法`)
+    }
+  }
+
+  const requiredFields = fields.filter((f) => f.required)
   if (requiredFields.length === 0) {
     errors.push('schema 至少一个必填字段')
   }

@@ -3,7 +3,7 @@ const assert = require('node:assert')
 const { runHarnessCheck } = require('../src/harness-check')
 
 test('harness-check 正常配置通过', () => {
-  const schema = { submit: { action: 'submit_create_part' }, fields: [{ name: 'material_name', required: true }] }
+  const schema = { submit: { action: 'submit_create_part' }, fields: [{ name: 'material_name', type: 'input', required: true }] }
   const config = {
     allowedTools: ['list_field_options', 'prepare_create_part'],
     systemPrompt: 'sys',
@@ -248,4 +248,73 @@ test('harness-check 要求 systemPrompt/topicBoundary 显式非空', () => {
   assert.strictEqual(outEmpty.ok, false)
   assert.ok(outEmpty.errors.some((e) => e.includes('systemPrompt')))
   assert.ok(outEmpty.errors.some((e) => e.includes('topicBoundary')))
+})
+
+test('harness-check 要求 schema.fields 为数组', () => {
+  const out = runHarnessCheck({
+    schema: { submit: { action: 'submit_create_part' } },
+    config: {
+      allowedTools: ['list_field_options', 'prepare_create_part'],
+      systemPrompt: 'sys',
+      topicBoundary: '仅 PLM / 物料领域',
+      maxSteps: 6,
+      maxHistory: 20,
+      maxToolArgsSize: 4096,
+      maxToolCallsPerStep: 5,
+      openaiMaxRetries: 1,
+      callbackDedupeTtlMs: 300000,
+      maxRequestsPerMinute: 20,
+    },
+  })
+  assert.strictEqual(out.ok, false)
+  assert.ok(out.errors.some((e) => e.includes('schema.fields 必须是数组')))
+})
+
+test('harness-check 识别 schema 字段名重复', () => {
+  const out = runHarnessCheck({
+    schema: {
+      submit: { action: 'submit_create_part' },
+      fields: [
+        { name: 'material_name', type: 'input', required: true },
+        { name: 'material_name', type: 'select', required: true },
+      ],
+    },
+    config: {
+      allowedTools: ['list_field_options', 'prepare_create_part'],
+      systemPrompt: 'sys',
+      topicBoundary: '仅 PLM / 物料领域',
+      maxSteps: 6,
+      maxHistory: 20,
+      maxToolArgsSize: 4096,
+      maxToolCallsPerStep: 5,
+      openaiMaxRetries: 1,
+      callbackDedupeTtlMs: 300000,
+      maxRequestsPerMinute: 20,
+    },
+  })
+  assert.strictEqual(out.ok, false)
+  assert.ok(out.errors.some((e) => e.includes('字段名重复')))
+})
+
+test('harness-check 识别 schema 字段 type 非法', () => {
+  const out = runHarnessCheck({
+    schema: {
+      submit: { action: 'submit_create_part' },
+      fields: [{ name: 'material_name', type: 'text', required: true }],
+    },
+    config: {
+      allowedTools: ['list_field_options', 'prepare_create_part'],
+      systemPrompt: 'sys',
+      topicBoundary: '仅 PLM / 物料领域',
+      maxSteps: 6,
+      maxHistory: 20,
+      maxToolArgsSize: 4096,
+      maxToolCallsPerStep: 5,
+      openaiMaxRetries: 1,
+      callbackDedupeTtlMs: 300000,
+      maxRequestsPerMinute: 20,
+    },
+  })
+  assert.strictEqual(out.ok, false)
+  assert.ok(out.errors.some((e) => e.includes('type 非法')))
 })
