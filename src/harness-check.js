@@ -2,6 +2,8 @@ const formConfig = require('./form-config')
 const agentConfig = require('../config/agent.json')
 const { ALL_TOOLS } = require('./tools')
 const { ENDPOINT_MAP } = require('./form-config')
+const FIELD_NAME_RE = /^[a-z][a-z0-9_]*$/
+const MAX_FIELD_NAME_LEN = 40
 
 function runHarnessCheck({ schema = formConfig.loadSchema(), config = agentConfig } = {}) {
   const errors = []
@@ -48,6 +50,9 @@ function runHarnessCheck({ schema = formConfig.loadSchema(), config = agentConfi
     if (!f?.name || typeof f.name !== 'string' || f.name.trim() === '') {
       errors.push('schema 字段 name 不能为空')
       continue
+    }
+    if (!FIELD_NAME_RE.test(f.name) || f.name.length > MAX_FIELD_NAME_LEN) {
+      errors.push(`schema 字段 ${f.name} name 格式非法`)
     }
     if (!['input', 'select'].includes(f.type)) {
       errors.push(`schema 字段 ${f.name} type 非法`)

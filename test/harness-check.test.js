@@ -497,3 +497,26 @@ test('harness-check 识别 select static options value 重复', () => {
   assert.strictEqual(out.ok, false)
   assert.ok(out.errors.some((e) => e.includes('optionSource.options.value 重复')))
 })
+
+test('harness-check 识别 schema 字段名格式非法', () => {
+  const out = runHarnessCheck({
+    schema: {
+      submit: { action: 'submit_create_part' },
+      fields: [{ name: 'Bad-Name', type: 'input', required: true }],
+    },
+    config: {
+      allowedTools: ['list_field_options', 'prepare_create_part'],
+      systemPrompt: 'sys',
+      topicBoundary: '仅 PLM / 物料领域',
+      maxSteps: 6,
+      maxHistory: 20,
+      maxToolArgsSize: 4096,
+      maxToolCallsPerStep: 5,
+      openaiMaxRetries: 1,
+      callbackDedupeTtlMs: 300000,
+      maxRequestsPerMinute: 20,
+    },
+  })
+  assert.strictEqual(out.ok, false)
+  assert.ok(out.errors.some((e) => e.includes('name 格式非法')))
+})
