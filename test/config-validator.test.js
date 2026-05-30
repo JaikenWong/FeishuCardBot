@@ -149,3 +149,22 @@ test('护栏字段缺失时报显式配置错误', () => {
   assert.ok(out.errors.some((e) => e.includes('callbackDedupeTtlMs 必须显式配置')))
   assert.ok(out.errors.some((e) => e.includes('maxRequestsPerMinute 必须显式配置')))
 })
+
+test('allowedTools 重复时报错', () => {
+  const schema = { fields: [{ name: 'material_name', type: 'input', required: true }] }
+  const out = validateAgentRuntimeConfig({
+    schema,
+    agentConfig: {
+      allowedTools: ['list_field_options', 'prepare_create_part', 'list_field_options'],
+      maxSteps: 6,
+      maxHistory: 20,
+      openaiMaxRetries: 1,
+      callbackDedupeTtlMs: 300000,
+      maxRequestsPerMinute: 20,
+      maxToolArgsSize: 4096,
+      maxToolCallsPerStep: 5,
+    },
+  })
+  assert.strictEqual(out.ok, false)
+  assert.ok(out.errors.some((e) => e.includes('allowedTools 含重复工具')))
+})

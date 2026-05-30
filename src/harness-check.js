@@ -22,6 +22,10 @@ function runHarnessCheck({ schema = formConfig.loadSchema(), config = agentConfi
   if (unknownTools.length) {
     errors.push(`allowedTools 含未知工具: ${unknownTools.join(', ')}`)
   }
+  const dupTools = allowedTools.filter((t, i) => allowedTools.indexOf(t) !== i)
+  if (dupTools.length) {
+    errors.push(`allowedTools 含重复工具: ${Array.from(new Set(dupTools)).join(', ')}`)
+  }
 
   const requiredFields = (schema.fields || []).filter((f) => f.required)
   if (requiredFields.length === 0) {

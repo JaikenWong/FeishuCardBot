@@ -40,6 +40,21 @@ test('harness-check 识别未知工具名', () => {
   assert.ok(out.errors.some((e) => e.includes('未知工具')))
 })
 
+test('harness-check 识别重复工具名', () => {
+  const schema = { submit: { action: 'submit_create_part' }, fields: [{ name: 'material_name', required: true }] }
+  const config = {
+    allowedTools: ['list_field_options', 'prepare_create_part', 'list_field_options'],
+    maxToolArgsSize: 4096,
+    maxToolCallsPerStep: 5,
+    openaiMaxRetries: 1,
+    callbackDedupeTtlMs: 300000,
+    maxRequestsPerMinute: 20,
+  }
+  const out = runHarnessCheck({ schema, config })
+  assert.strictEqual(out.ok, false)
+  assert.ok(out.errors.some((e) => e.includes('重复工具')))
+})
+
 test('harness-check 要求 maxToolArgsSize 显式配置且合法', () => {
   const schema = { submit: { action: 'submit_create_part' }, fields: [{ name: 'material_name', required: true }] }
   const out1 = runHarnessCheck({
