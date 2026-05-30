@@ -14,6 +14,9 @@ function runHarnessCheck({ schema = formConfig.loadSchema(), config = agentConfi
   if (!allowedTools.includes('prepare_create_part')) {
     errors.push('必须允许 prepare_create_part（创建二次确认）')
   }
+  if (!allowedTools.includes('list_field_options')) {
+    errors.push('必须允许 list_field_options（字段选项查询）')
+  }
 
   if (allowedTools.some((t) => /create_part|create_material/i.test(t) && t !== 'prepare_create_part')) {
     errors.push('禁止直接创建类 tool 出现在白名单')
