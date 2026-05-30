@@ -24,6 +24,11 @@ test('list_field_options 未知字段返回 error', async () => {
   assert.ok(out.result.error)
 })
 
+test('list_field_options 非 select 字段返回 error', async () => {
+  const out = await executeTool('list_field_options', { field: 'material_name' }, { schema, client: {} })
+  assert.ok(out.result.error.includes('不支持选项查询'))
+})
+
 test('list_field_options 非法 field 参数返回 error', async () => {
   const out1 = await executeTool('list_field_options', { field: '' }, { schema, client: {} })
   assert.ok(out1.result.error.includes('不能为空'))

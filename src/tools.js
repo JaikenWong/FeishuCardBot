@@ -66,6 +66,9 @@ async function executeTool(name, args, deps) {
     }
     const field = schema.fields.find((f) => f.name === fieldArg)
     if (!field) return { result: { error: `未知字段: ${args.field}` } }
+    if (field.type !== 'select') {
+      return { result: { error: `字段 ${fieldArg} 不支持选项查询` } }
+    }
     const { options, unavailable } = await formConfig.resolveFieldOptions(field, client)
     return { result: { field: fieldArg, options, unavailable } }
   }
