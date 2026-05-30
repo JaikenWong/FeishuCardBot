@@ -2,6 +2,7 @@ const fs = require('fs')
 
 function validateReplayFixture(fixture, filePath = '') {
   const where = filePath ? ` in ${filePath}` : ''
+  const allowedExpectKeys = new Set(['type', 'contains', 'actionType', 'notCardAction'])
   if (!fixture || typeof fixture !== 'object' || Array.isArray(fixture)) {
     throw new Error(`invalid replay fixture${where}: root must be object`)
   }
@@ -20,6 +21,30 @@ function validateReplayFixture(fixture, filePath = '') {
     }
     if (!turn.expect || typeof turn.expect !== 'object' || Array.isArray(turn.expect)) {
       throw new Error(`invalid replay fixture${where}: turns[${idx}].expect must be object`)
+    }
+    const expect = turn.expect
+    if (expect.type !== 'reply' && expect.type !== 'cardAction') {
+      throw new Error(`invalid replay fixture${where}: turns[${idx}].expect.type must be reply|cardAction`)
+    }
+    const unknownKeys = Object.keys(expect).filter((k) => !allowedExpectKeys.has(k))
+    if (unknownKeys.length > 0) {
+      throw new Error(`invalid replay fixture${where}: turns[${idx}].expect has unknown keys: ${unknownKeys.join(',')}`)
+    }
+    if (Object.prototype.hasOwnProperty.call(expect, 'contains')) {
+      if (typeof expect.contains !== 'string' || expect.contains.trim() === '') {
+        throw new Error(`invalid replay fixture${where}: turns[${idx}].expect.contains must be non-empty string`)
+      }
+    }
+    if (Object.prototype.hasOwnProperty.call(expect, 'actionType')) {
+      if (typeof expect.actionType !== 'string' || expect.actionType.trim() === '') {
+        throw new Error(`invalid replay fixture${where}: turns[${idx}].expect.actionType must be non-empty string`)
+      }
+    }
+    if (Object.prototype.hasOwnProperty.call(expect, 'notCardAction') && expect.notCardAction !== true) {
+      throw new Error(`invalid replay fixture${where}: turns[${idx}].expect.notCardAction must be true when provided`)
+    }
+    if (expect.type === 'reply' && Object.prototype.hasOwnProperty.call(expect, 'actionType')) {
+      throw new Error(`invalid replay fixture${where}: turns[${idx}].expect.actionType only allowed for cardAction`)
     }
   })
 }

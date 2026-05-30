@@ -65,7 +65,17 @@ async function main() {
   let hasFail = false
   const aggregate = { total: 0, cardAction: 0, timeout: 0, serviceUnavailable: 0, otherReply: 0, empty: 0 }
   for (const f of fixturePaths) {
-    const { fixture, check, summary } = await runFixture(f)
+    let fixture
+    let check
+    let summary
+    try {
+      ({ fixture, check, summary } = await runFixture(f))
+    } catch (e) {
+      hasFail = true
+      console.log(`[replay] FAIL ${path.basename(f)}`)
+      console.log(`- ${e.message || String(e)}`)
+      continue
+    }
     aggregate.total += summary.total
     aggregate.cardAction += summary.cardAction
     aggregate.timeout += summary.timeout

@@ -278,4 +278,20 @@ test('validateReplayFixture 对坏结构 fail-fast', () => {
     () => validateReplayFixture({ name: 'x', turns: [{ user: 'u1' }] }),
     /turns\[0\]\.expect must be object/
   )
+  assert.throws(
+    () => validateReplayFixture({ name: 'x', turns: [{ user: 'u1', expect: { type: 'x' } }] }),
+    /expect\.type must be reply\|cardAction/
+  )
+  assert.throws(
+    () => validateReplayFixture({ name: 'x', turns: [{ user: 'u1', expect: { type: 'reply', typo: 'x' } }] }),
+    /expect has unknown keys/
+  )
+  assert.throws(
+    () => validateReplayFixture({ name: 'x', turns: [{ user: 'u1', expect: { type: 'reply', actionType: 'confirm_create' } }] }),
+    /actionType only allowed for cardAction/
+  )
+  assert.throws(
+    () => validateReplayFixture({ name: 'x', turns: [{ user: 'u1', expect: { type: 'reply', notCardAction: false } }] }),
+    /expect\.notCardAction must be true/
+  )
 })
