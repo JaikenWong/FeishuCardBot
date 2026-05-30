@@ -341,3 +341,72 @@ test('harness-check 识别 select 缺 optionSource', () => {
   assert.strictEqual(out.ok, false)
   assert.ok(out.errors.some((e) => e.includes('select 时必须配置 optionSource')))
 })
+
+test('harness-check 识别 select optionSource.type 非法', () => {
+  const out = runHarnessCheck({
+    schema: {
+      submit: { action: 'submit_create_part' },
+      fields: [{ name: 'project_number', type: 'select', required: true, optionSource: { type: 'bad' } }],
+    },
+    config: {
+      allowedTools: ['list_field_options', 'prepare_create_part'],
+      systemPrompt: 'sys',
+      topicBoundary: '仅 PLM / 物料领域',
+      maxSteps: 6,
+      maxHistory: 20,
+      maxToolArgsSize: 4096,
+      maxToolCallsPerStep: 5,
+      openaiMaxRetries: 1,
+      callbackDedupeTtlMs: 300000,
+      maxRequestsPerMinute: 20,
+    },
+  })
+  assert.strictEqual(out.ok, false)
+  assert.ok(out.errors.some((e) => e.includes('optionSource.type 非法')))
+})
+
+test('harness-check 识别 select optionSource.endpoint 非法', () => {
+  const out = runHarnessCheck({
+    schema: {
+      submit: { action: 'submit_create_part' },
+      fields: [{ name: 'project_number', type: 'select', required: true, optionSource: { type: 'plm', endpoint: 'bad' } }],
+    },
+    config: {
+      allowedTools: ['list_field_options', 'prepare_create_part'],
+      systemPrompt: 'sys',
+      topicBoundary: '仅 PLM / 物料领域',
+      maxSteps: 6,
+      maxHistory: 20,
+      maxToolArgsSize: 4096,
+      maxToolCallsPerStep: 5,
+      openaiMaxRetries: 1,
+      callbackDedupeTtlMs: 300000,
+      maxRequestsPerMinute: 20,
+    },
+  })
+  assert.strictEqual(out.ok, false)
+  assert.ok(out.errors.some((e) => e.includes('optionSource.endpoint 非法')))
+})
+
+test('harness-check 识别 select static options 为空', () => {
+  const out = runHarnessCheck({
+    schema: {
+      submit: { action: 'submit_create_part' },
+      fields: [{ name: 'project_number', type: 'select', required: true, optionSource: { type: 'static', options: [] } }],
+    },
+    config: {
+      allowedTools: ['list_field_options', 'prepare_create_part'],
+      systemPrompt: 'sys',
+      topicBoundary: '仅 PLM / 物料领域',
+      maxSteps: 6,
+      maxHistory: 20,
+      maxToolArgsSize: 4096,
+      maxToolCallsPerStep: 5,
+      openaiMaxRetries: 1,
+      callbackDedupeTtlMs: 300000,
+      maxRequestsPerMinute: 20,
+    },
+  })
+  assert.strictEqual(out.ok, false)
+  assert.ok(out.errors.some((e) => e.includes('optionSource.options 不能为空')))
+})

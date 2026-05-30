@@ -1,6 +1,7 @@
 const formConfig = require('./form-config')
 const agentConfig = require('../config/agent.json')
 const { ALL_TOOLS } = require('./tools')
+const { ENDPOINT_MAP } = require('./form-config')
 
 function runHarnessCheck({ schema = formConfig.loadSchema(), config = agentConfig } = {}) {
   const errors = []
@@ -53,6 +54,20 @@ function runHarnessCheck({ schema = formConfig.loadSchema(), config = agentConfi
     }
     if (f.type === 'select' && !f.optionSource) {
       errors.push(`schema 字段 ${f.name} 为 select 时必须配置 optionSource`)
+      continue
+    }
+    if (f.type === 'select') {
+      const src = f.optionSource || {}
+      if (!['static', 'plm'].includes(src.type)) {
+        errors.push(`schema 字段 ${f.name} optionSource.type 非法`)
+        continue
+      }
+      if (src.type === 'plm' && !ENDPOINT_MAP[src.endpoint]) {
+        errors.push(`schema 字段 ${f.name} optionSource.endpoint 非法`)
+      }
+      if (src.type === 'static' && (!Array.isArray(src.options) || src.options.length === 0)) {
+        errors.push(`schema 字段 ${f.name} optionSource.options 不能为空`)
+      }
     }
   }
 
