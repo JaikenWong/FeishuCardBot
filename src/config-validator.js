@@ -112,7 +112,7 @@ function validateAgentRuntimeConfig({ schema, agentConfig }) {
     errors.push(`agent.maxToolCallsPerStep 必须在 ${LIMITS.maxToolCallsPerStep.min}-${LIMITS.maxToolCallsPerStep.max} 之间`)
   }
 
-  const requiredFields = (schema?.fields || []).filter((f) => f.required)
+  const requiredFields = (schema?.fields || []).filter((f) => f && f.required)
   if (requiredFields.length === 0) errors.push('form-schema 至少要有一个 required 字段')
   const names = (schema?.fields || []).map((f) => f?.name).filter(Boolean)
   const dupNames = names.filter((x, i) => names.indexOf(x) !== i)
@@ -132,7 +132,10 @@ function validateAgentRuntimeConfig({ schema, agentConfig }) {
   }
 
   for (const f of schema?.fields || []) {
-    if (!f.name) errors.push('form-schema 字段缺少 name')
+    if (!f || !f.name) {
+      errors.push('form-schema 字段缺少 name')
+      continue
+    }
     if (f?.name && (typeof f.name !== 'string' || !FIELD_NAME_RE.test(f.name) || f.name.length > MAX_FIELD_NAME_LEN)) {
       errors.push(`字段 ${f.name} name 格式非法`)
     }
