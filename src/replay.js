@@ -3,6 +3,12 @@ const fs = require('fs')
 function validateReplayFixture(fixture, filePath = '') {
   const where = filePath ? ` in ${filePath}` : ''
   const allowedExpectKeys = new Set(['type', 'contains', 'actionType', 'notCardAction'])
+  const assertIntInRange = (key, min, max) => {
+    if (fixture[key] == null) return
+    if (!Number.isInteger(fixture[key]) || fixture[key] < min || fixture[key] > max) {
+      throw new Error(`invalid replay fixture${where}: ${key} must be integer in ${min}-${max}`)
+    }
+  }
   if (!fixture || typeof fixture !== 'object' || Array.isArray(fixture)) {
     throw new Error(`invalid replay fixture${where}: root must be object`)
   }
@@ -11,6 +17,24 @@ function validateReplayFixture(fixture, filePath = '') {
   }
   if (!Array.isArray(fixture.turns) || fixture.turns.length === 0) {
     throw new Error(`invalid replay fixture${where}: turns must be non-empty array`)
+  }
+  assertIntInRange('maxSteps', 1, 12)
+  assertIntInRange('openaiMaxRetries', 0, 5)
+  assertIntInRange('maxToolArgsSize', 1, 32768)
+  if (fixture.mockResponses != null) {
+    if (!Array.isArray(fixture.mockResponses) || fixture.mockResponses.length === 0) {
+      throw new Error(`invalid replay fixture${where}: mockResponses must be non-empty array when provided`)
+    }
+    fixture.mockResponses.forEach((item, idx) => {
+      if (!item || typeof item !== 'object' || Array.isArray(item)) {
+        throw new Error(`invalid replay fixture${where}: mockResponses[${idx}] must be object`)
+      }
+      if (item.__throw === true) {
+        if (typeof item.message !== 'string' || item.message.trim() === '') {
+          throw new Error(`invalid replay fixture${where}: mockResponses[${idx}].message must be non-empty string when __throw=true`)
+        }
+      }
+    })
   }
   fixture.turns.forEach((turn, idx) => {
     if (!turn || typeof turn !== 'object' || Array.isArray(turn)) {
@@ -48,6 +72,12 @@ function validateReplayFixture(fixture, filePath = '') {
     }
     if (expect.type === 'reply' && !Object.prototype.hasOwnProperty.call(expect, 'contains')) {
       throw new Error(`invalid replay fixture${where}: turns[${idx}].expect.contains required for reply assertions`)
+    }
+    if (expect.type === 'cardAction' && !Object.prototype.hasOwnProperty.call(expect, 'actionType')) {
+      throw new Error(`invalid replay fixture${where}: turns[${idx}].expect.actionType required for cardAction assertions`)
+    }
+    if (expect.type === 'cardAction' && Object.prototype.hasOwnProperty.call(expect, 'contains')) {
+      throw new Error(`invalid replay fixture${where}: turns[${idx}].expect.contains only allowed for reply`)
     }
   })
 }
