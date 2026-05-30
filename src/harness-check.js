@@ -36,6 +36,15 @@ function runHarnessCheck({ schema = formConfig.loadSchema(), config = agentConfi
   } else if (maxToolArgsSize < 256 || maxToolArgsSize > 32768) {
     errors.push('maxToolArgsSize 必须在 256-32768 之间')
   }
+  if (!Number.isInteger(config.openaiMaxRetries) || config.openaiMaxRetries < 0 || config.openaiMaxRetries > 5) {
+    errors.push('openaiMaxRetries 必须显式配置且在 0-5 之间')
+  }
+  if (!Number.isInteger(config.callbackDedupeTtlMs) || config.callbackDedupeTtlMs < 1000 || config.callbackDedupeTtlMs > 3600000) {
+    errors.push('callbackDedupeTtlMs 必须显式配置且在 1000-3600000 之间')
+  }
+  if (!Number.isInteger(config.maxRequestsPerMinute) || config.maxRequestsPerMinute < 1 || config.maxRequestsPerMinute > 120) {
+    errors.push('maxRequestsPerMinute 必须显式配置且在 1-120 之间')
+  }
 
   return { ok: errors.length === 0, errors }
 }

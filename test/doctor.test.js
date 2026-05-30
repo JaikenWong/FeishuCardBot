@@ -27,6 +27,7 @@ test('runDoctor 全通过', () => {
     openaiMaxRetries: 1,
     maxToolArgsSize: 4096,
     callbackDedupeTtlMs: 300000,
+    maxRequestsPerMinute: 20,
   }
   const out = runDoctor({ env, agentConfig, schema })
   assert.strictEqual(out.ok, true)
