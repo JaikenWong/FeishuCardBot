@@ -315,6 +315,10 @@ test('validateReplayFixture 对坏结构 fail-fast', () => {
     /expect\.contains only allowed for reply/
   )
   assert.throws(
+    () => validateReplayFixture({ name: 'x-flow', turns: [{ user: 'u1', expect: { type: 'cardAction', actionType: 'bad_action' } }] }),
+    /expect\.actionType must be confirm_create/
+  )
+  assert.throws(
     () => validateReplayFixture({ name: 'x-flow', turns: [{ user: 'u1', expect: { type: 'cardAction', actionType: 'confirm_create', notCardAction: true } }] }),
     /expect\.notCardAction only allowed for reply/
   )

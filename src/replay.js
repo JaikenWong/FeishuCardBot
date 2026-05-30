@@ -71,6 +71,9 @@ function validateReplayFixture(fixture, filePath = '') {
       if (typeof expect.actionType !== 'string' || expect.actionType.trim() === '') {
         throw new Error(`invalid replay fixture${where}: turns[${idx}].expect.actionType must be non-empty string`)
       }
+      if (expect.actionType !== 'confirm_create') {
+        throw new Error(`invalid replay fixture${where}: turns[${idx}].expect.actionType must be confirm_create`)
+      }
     }
     if (Object.prototype.hasOwnProperty.call(expect, 'notCardAction') && expect.notCardAction !== true) {
       throw new Error(`invalid replay fixture${where}: turns[${idx}].expect.notCardAction must be true when provided`)
