@@ -92,6 +92,9 @@ function runStrictChecks({ schema, config, replayFixtureDir }) {
   if (typeof config?.model !== 'string') {
     errors.push('agent.model 必须是字符串（可为空，运行时走 env）')
   }
+  if (!schema?.submit || typeof schema.submit !== 'object' || Array.isArray(schema.submit)) {
+    errors.push('schema.submit 必须是对象')
+  }
   const submitText = String(schema?.submit?.text || '').trim()
   if (!submitText) {
     errors.push('schema.submit.text 不能为空')

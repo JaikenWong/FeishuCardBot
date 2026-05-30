@@ -13,7 +13,7 @@ test('checkEnv 缺失变量识别', () => {
 
 test('runDoctor 全通过', () => {
   const schema = {
-    submit: { action: 'submit_create_part' },
+    submit: { text: '✅ 确定创建', action: 'submit_create_part' },
     fields: [{ name: 'material_name', type: 'input', required: true }],
   }
   const env = {
@@ -39,7 +39,7 @@ test('runDoctor 全通过', () => {
 
 test('runDoctor 缺 env 失败', () => {
   const schema = {
-    submit: { action: 'submit_create_part' },
+    submit: { text: '✅ 确定创建', action: 'submit_create_part' },
     fields: [{ name: 'material_name', type: 'input', required: true }],
   }
   const out = runDoctor({
@@ -53,7 +53,7 @@ test('runDoctor 缺 env 失败', () => {
 
 test('runDoctor skipEnv 时忽略 env 缺失', () => {
   const schema = {
-    submit: { action: 'submit_create_part' },
+    submit: { text: '✅ 确定创建', action: 'submit_create_part' },
     fields: [{ name: 'material_name', type: 'input', required: true }],
   }
   const out = runDoctor({
@@ -66,7 +66,7 @@ test('runDoctor skipEnv 时忽略 env 缺失', () => {
 })
 
 test('runDoctor 在 harness 规则违规时失败', () => {
-  const schema = { submit: { action: 'submit_create_part' }, fields: [{ name: 'material_name', type: 'input', required: true }] }
+  const schema = { submit: { text: '✅ 确定创建', action: 'submit_create_part' }, fields: [{ name: 'material_name', type: 'input', required: true }] }
   const out = runDoctor({
     env: { FEISHU_APP_ID: 'x', FEISHU_APP_SECRET: 'x', OPENAI_BASE_URL: 'x', OPENAI_API_KEY: 'x', OPENAI_MODEL: 'x' },
     schema,
@@ -82,7 +82,7 @@ test('runDoctor 配置文件损坏时失败', () => {
   fs.writeFileSync(badCfg, '{bad json', 'utf8')
   const out = runDoctor({
     skipEnv: true,
-    schema: { submit: { action: 'submit_create_part' }, fields: [{ name: 'material_name', type: 'input', required: true }] },
+    schema: { submit: { text: '✅ 确定创建', action: 'submit_create_part' }, fields: [{ name: 'material_name', type: 'input', required: true }] },
     configPath: badCfg,
   })
   assert.strictEqual(out.ok, false)
@@ -106,7 +106,7 @@ test('runStrictChecks: 重复字段与未知 endpoint 失败', () => {
 
 test('runDoctor strict 开启时执行严格校验', () => {
   const schema = {
-    submit: { action: 'submit_create_part' },
+    submit: { text: '✅ 确定创建', action: 'submit_create_part' },
     fields: [
       { name: 'material_name', type: 'input', required: true },
       { name: 'material_name', type: 'select', required: true, optionSource: { type: 'plm', endpoint: 'bad' } },
@@ -170,6 +170,15 @@ test('runStrictChecks: submit 文案空或过长失败', () => {
   })
   assert.strictEqual(r2.ok, false)
   assert.ok(r2.errors.some((e) => e.includes('长度不能超过 30')))
+})
+
+test('runStrictChecks: submit 不是对象失败', () => {
+  const out = runStrictChecks({
+    schema: { submit: [], fields: [{ name: 'material_name', type: 'input', required: true }] },
+    config: { model: '', systemPrompt: 'ok' },
+  })
+  assert.strictEqual(out.ok, false)
+  assert.ok(out.errors.some((e) => e.includes('schema.submit 必须是对象')))
 })
 
 test('runStrictChecks: 字段 label/placeholder 质量失败', () => {
