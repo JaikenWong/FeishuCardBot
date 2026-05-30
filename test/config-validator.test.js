@@ -226,6 +226,25 @@ test('allowedTools 非数组时不崩溃并报错', () => {
   assert.ok(out.errors.some((e) => e.includes('allowedTools 必须是数组')))
 })
 
+test('allowedTools 为空字符串时报类型错误', () => {
+  const schema = { fields: [{ name: 'material_name', type: 'input', required: true }] }
+  const out = validateAgentRuntimeConfig({
+    schema,
+    agentConfig: {
+      allowedTools: '',
+      maxSteps: 6,
+      maxHistory: 20,
+      openaiMaxRetries: 1,
+      callbackDedupeTtlMs: 300000,
+      maxRequestsPerMinute: 20,
+      maxToolArgsSize: 4096,
+      maxToolCallsPerStep: 5,
+    },
+  })
+  assert.strictEqual(out.ok, false)
+  assert.ok(out.errors.some((e) => e.includes('allowedTools 必须是数组')))
+})
+
 test('allowedTools 含未知工具时报错', () => {
   const schema = { fields: [{ name: 'material_name', type: 'input', required: true }] }
   const out = validateAgentRuntimeConfig({

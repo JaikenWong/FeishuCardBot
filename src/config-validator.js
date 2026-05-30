@@ -59,7 +59,7 @@ function validateAgentRuntimeConfig({ schema, agentConfig }) {
     }
   }
 
-  const tools = cfg.allowedTools || []
+  const tools = cfg.allowedTools
   if (!Array.isArray(tools)) {
     errors.push('agent.allowedTools 必须是数组')
   } else {
