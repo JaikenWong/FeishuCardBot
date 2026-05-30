@@ -40,3 +40,14 @@ test('checkReplayFixtures: fixture name 重复失败', () => {
   assert.strictEqual(out.ok, false)
   assert.ok(out.errors.some((e) => e.includes('fixture name 重复: dup-name')))
 })
+
+test('checkReplayFixtures: fixture name 与文件名不一致失败', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'replay-fixtures-name-mismatch-'))
+  fs.writeFileSync(path.join(dir, 'replay-foo.json'), JSON.stringify({
+    name: 'bar-flow',
+    turns: [{ user: 'u1', expect: { type: 'reply', contains: 'x' } }],
+  }), 'utf8')
+  const out = checkReplayFixtures({ fixtureDir: dir })
+  assert.strictEqual(out.ok, false)
+  assert.ok(out.errors.some((e) => e.includes('fixture name 与文件名不一致')))
+})

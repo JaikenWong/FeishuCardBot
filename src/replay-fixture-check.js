@@ -24,6 +24,10 @@ function checkReplayFixtures({ fixtureDir = path.join(__dirname, '..', 'test', '
     try {
       const fixture = loadReplayFixture(fullPath)
       const key = String(fixture.name).trim()
+      const expectedName = `${file.replace(/^replay-/, '').replace(/\.json$/, '')}-flow`
+      if (key !== expectedName) {
+        errors.push(`fixture name 与文件名不一致: ${key} (expected: ${expectedName}, file: ${file})`)
+      }
       const prev = seenNames.get(key)
       if (prev) {
         errors.push(`fixture name 重复: ${key} (${prev}, ${file})`)
