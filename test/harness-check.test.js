@@ -60,6 +60,14 @@ test('harness-check 识别 submit 不是对象', () => {
   assert.ok(out.errors.some((e) => e.includes('schema.submit 必须是对象')))
 })
 
+test('harness-check 识别 fields 含空项', () => {
+  const schema = { submit: { text: '✅ 确定创建', action: 'submit_create_part' }, fields: [null] }
+  const config = { allowedTools: ['list_field_options', 'prepare_create_part'], systemPrompt: 'sys', topicBoundary: '仅 PLM / 物料领域', maxSteps: 6, maxHistory: 20, maxToolArgsSize: 4096, maxToolCallsPerStep: 5, openaiMaxRetries: 1, callbackDedupeTtlMs: 300000, maxRequestsPerMinute: 20 }
+  const out = runHarnessCheck({ schema, config })
+  assert.strictEqual(out.ok, false)
+  assert.ok(out.errors.some((e) => e.includes('schema 字段 name 不能为空')))
+})
+
 test('harness-check 识别未知工具名', () => {
   const schema = { submit: { text: '✅ 确定创建', action: 'submit_create_part' }, fields: [{ name: 'material_name', required: true }] }
   const config = { allowedTools: ['list_field_options', 'not_exist_tool'], systemPrompt: 'sys', topicBoundary: '仅 PLM / 物料领域', maxSteps: 6, maxHistory: 20, maxToolArgsSize: 4096, maxToolCallsPerStep: 5, openaiMaxRetries: 1, callbackDedupeTtlMs: 300000, maxRequestsPerMinute: 20 }

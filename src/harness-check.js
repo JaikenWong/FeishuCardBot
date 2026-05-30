@@ -50,7 +50,7 @@ function runHarnessCheck({ schema = formConfig.loadSchema(), config = agentConfi
     errors.push(`schema 字段名重复: ${Array.from(new Set(dupNames)).join(', ')}`)
   }
   for (const f of fields) {
-    if (!f?.name || typeof f.name !== 'string' || f.name.trim() === '') {
+    if (!f || !f.name || typeof f.name !== 'string' || f.name.trim() === '') {
       errors.push('schema 字段 name 不能为空')
       continue
     }
@@ -100,7 +100,7 @@ function runHarnessCheck({ schema = formConfig.loadSchema(), config = agentConfi
     }
   }
 
-  const requiredFields = fields.filter((f) => f.required)
+  const requiredFields = fields.filter((f) => f && f.required)
   if (requiredFields.length === 0) {
     errors.push('schema 至少一个必填字段')
   }
